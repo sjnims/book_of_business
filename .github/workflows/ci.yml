@@ -121,11 +121,6 @@ jobs:
           path: tmp/rubocop.json
           retention-days: 30
 
-      - name: Check for database schema changes
-        run: |
-          bin/rails db:schema:dump
-          git diff --exit-code db/schema.rb || (echo "::error::Database schema is out of sync" && exit 1)
-
       - name: Check for asset precompilation issues
         run: |
           bin/rails assets:precompile
@@ -187,6 +182,11 @@ jobs:
           bin/rails db:create
           bin/rails db:schema:load
           bin/rails db:seed RAILS_ENV=test || true
+          
+      - name: Verify schema is up to date
+        run: |
+          bin/rails db:schema:dump
+          git diff --exit-code db/schema.rb || (echo "::error::Database schema is out of sync. Run 'rails db:migrate' locally and commit the changes." && exit 1)
 
       - name: Compile assets
         run: bin/rails assets:precompile
