@@ -1,8 +1,225 @@
 # Omakase Ruby styling for Rails
 inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
-# Overwrite or add rules to create your own house style
-#
-# # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
-# Layout/SpaceInsideArrayLiteralBrackets:
-#   Enabled: false
+plugins:
+  - rubocop-rails
+  - rubocop-performance
+  - rubocop-minitest
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.4
+  TargetRailsVersion: 8.0
+  Exclude:
+    - 'bin/**/*'
+    - 'db/schema.rb'
+    - 'db/migrate/*'
+    - 'vendor/**/*'
+    - 'node_modules/**/*'
+    - 'tmp/**/*'
+    - 'log/**/*'
+
+# Enterprise Code Quality Standards
+
+# Enforce meaningful names and clear code
+Naming/VariableName:
+  Enabled: true
+  AllowedIdentifiers: ['i', 'j', 'k', 'id', 'io', 'ex', 'to']
+
+Naming/MethodName:
+  Enabled: true
+
+Naming/ClassAndModuleCamelCase:
+  Enabled: true
+
+# Security and Performance
+Rails/OutputSafety:
+  Enabled: true
+
+# Security-related cops
+Lint/InterpolationCheck:
+  Enabled: true
+
+Security/Eval:
+  Enabled: true
+
+Security/Open:
+  Enabled: true
+
+Security/YAMLLoad:
+  Enabled: true
+
+Security/MarshalLoad:
+  Enabled: true
+
+Security/JSONLoad:
+  Enabled: true
+
+# Code Complexity - Critical for maintainability
+Metrics/MethodLength:
+  Max: 20
+  CountAsOne: ['array', 'hash', 'heredoc']
+  Exclude:
+    - 'test/**/*'
+    - 'app/models/concerns/calculable.rb'
+    - 'app/services/revenue_calculator.rb'
+    - 'app/services/tcv_calculator.rb'
+
+Metrics/ClassLength:
+  Max: 150
+  CountAsOne: ['array', 'hash', 'heredoc']
+  Exclude:
+    - 'test/**/*'
+    - 'app/services/report_generator.rb'
+    - 'app/services/excel_importer.rb'
+
+Metrics/AbcSize:
+  Max: 20
+  Exclude:
+    - 'test/**/*'
+
+Metrics/CyclomaticComplexity:
+  Max: 8
+
+Metrics/PerceivedComplexity:
+  Max: 8
+
+Metrics/BlockLength:
+  Exclude:
+    - 'test/**/*'
+    - 'config/**/*'
+    - 'db/**/*'
+    - 'lib/tasks/**/*'
+
+# Documentation - Important for enterprise apps
+Style/Documentation:
+  Enabled: true
+  Exclude:
+    - 'app/controllers/application_controller.rb'
+    - 'app/models/application_record.rb'
+    - 'app/jobs/application_job.rb'
+    - 'app/mailers/application_mailer.rb'
+    - 'test/**/*'
+    - 'config/**/*'
+    - 'db/**/*'
+
+Style/DocumentationMethod:
+  Enabled: true
+  RequireForNonPublicMethods: false
+
+# Rails Best Practices
+Rails/UniqueValidationWithoutIndex:
+  Enabled: true
+
+Rails/HasManyOrHasOneDependent:
+  Enabled: true
+
+Rails/InverseOf:
+  Enabled: true
+
+Rails/TimeZone:
+  Enabled: true
+
+Rails/Date:
+  Enabled: true
+
+Rails/PluckInWhere:
+  Enabled: true
+
+Rails/SkipsModelValidations:
+  Enabled: true
+  Exclude:
+    - 'test/**/*'
+
+Rails/BulkChangeTable:
+  Enabled: true
+
+# Code Clarity
+Style/GuardClause:
+  Enabled: true
+
+Style/IfUnlessModifier:
+  Enabled: true
+
+Style/RedundantReturn:
+  Enabled: true
+
+Style/RedundantSelf:
+  Enabled: true
+
+Style/TrailingCommaInHashLiteral:
+  Enabled: true
+  EnforcedStyleForMultiline: comma
+
+Style/TrailingCommaInArrayLiteral:
+  Enabled: true
+  EnforcedStyleForMultiline: comma
+
+# Testing Standards
+Minitest/AssertEmptyLiteral:
+  Enabled: true
+
+Minitest/AssertInDelta:
+  Enabled: true
+
+Minitest/AssertWithExpectedArgument:
+  Enabled: true
+
+Minitest/TestMethodName:
+  Enabled: true
+
+# Financial Calculations - Extra careful with numbers
+Lint/FloatComparison:
+  Enabled: true
+
+Style/NumericLiterals:
+  Enabled: true
+  MinDigits: 5
+
+# API Design
+Rails/HttpPositionalArguments:
+  Enabled: true
+
+Rails/HttpStatus:
+  Enabled: true
+  EnforcedStyle: symbolic
+
+# Database Performance
+Rails/EagerEvaluationLogMessage:
+  Enabled: true
+
+Rails/FindBy:
+  Enabled: true
+
+Rails/FindEach:
+  Enabled: true
+
+Rails/WhereEquals:
+  Enabled: true
+
+Rails/WhereNot:
+  Enabled: true
+
+# Modern Ruby Features
+Style/HashSyntax:
+  Enabled: true
+  EnforcedStyle: ruby19_no_mixed_keys
+
+Style/SymbolProc:
+  Enabled: true
+
+Style/NumericPredicate:
+  Enabled: true
+
+# String Formatting
+Style/StringLiterals:
+  Enabled: true
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  Enabled: true
+  EnforcedStyle: double_quotes
+
+# Specific Business Logic Considerations
+# Complex calculations and report generators have relaxed limits
+# See exclusions in Metrics/MethodLength and Metrics/ClassLength above

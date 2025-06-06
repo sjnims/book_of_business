@@ -1,0 +1,153 @@
+codecov:
+  require_ci_to_pass: true
+  notify:
+    wait_for_ci: true
+
+coverage:
+  precision: 2
+  round: down
+  range: "80...100"  # Enterprise standard: 80-100%
+  
+  status:
+    # Overall project coverage
+    project:
+      default:
+        target: 85%  # Higher target for enterprise
+        threshold: 1%  # Stricter threshold
+        if_not_found: failure
+        if_ci_failed: error
+        informational: false
+      
+      # Separate targets for different components
+      models:
+        target: 90%  # Critical business logic needs high coverage
+        paths:
+          - "app/models/**"
+        if_not_found: failure
+      
+      controllers:
+        target: 85%
+        paths:
+          - "app/controllers/**"
+        if_not_found: failure
+      
+      services:
+        target: 90%  # Business logic services need high coverage
+        paths:
+          - "app/services/**"
+        if_not_found: failure
+      
+      lib:
+        target: 85%
+        paths:
+          - "lib/**"
+        if_not_found: failure
+    
+    # Coverage for changed code
+    patch:
+      default:
+        target: 90%  # New code should have high coverage
+        threshold: 1%
+        base: auto
+        if_not_found: failure
+        if_ci_failed: error
+        only_pulls: false
+
+# Ignore files that don't need coverage
+ignore:
+  - "test/**"
+  - "spec/**"
+  - "db/**"
+  - "config/**"
+  - "bin/**"
+  - "public/**"
+  - "vendor/**"
+  - "**/*.yml"
+  - "**/*.json"
+  - "**/*.md"
+  - "**/application_*.rb"  # Base classes
+  - "app/assets/**"
+  - "app/javascript/**"
+  - "app/views/**"  # Views are tested via system tests
+
+# Flag-based coverage for different test types
+flags:
+  unittests:
+    paths:
+      - "app/**"
+      - "lib/**"
+    carryforward: true
+  
+  integration:
+    paths:
+      - "app/**"
+    carryforward: true
+  
+  system:
+    paths:
+      - "app/**"
+    carryforward: true
+
+# Parser configuration
+parsers:
+  gcov:
+    branch_detection:
+      conditional: true
+      loop: true
+      method: true  # Enable method coverage
+      macro: false
+
+# PR comment configuration
+comment:
+  layout: "reach,diff,flags,tree,footer"
+  behavior: default
+  require_changes: true  # Only comment when coverage changes
+  require_base: true
+  require_head: true
+  branches:
+    - main
+    - master
+  after_n_builds: 1  # Wait for all CI builds
+  
+  # Show coverage trends
+  show_carryforward_flags: true
+  show_critical_paths: true
+  
+# GitHub integration
+github_checks:
+  annotations: true  # Show inline annotations in PR
+
+# Component-specific settings
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: auto
+        threshold: 1%
+    paths:
+      - "!test/**"
+      - "!spec/**"
+  
+  individual_components:
+    - name: critical_business_logic
+      paths:
+        - "app/models/order.rb"
+        - "app/models/service.rb"
+        - "app/models/customer.rb"
+        - "app/services/revenue_calculator.rb"
+        - "app/services/tcv_calculator.rb"
+      statuses:
+        - type: project
+          target: 95%  # Critical files need near-complete coverage
+          threshold: 0%
+
+# Notification settings
+notify:
+  slack:
+    default:
+      threshold: 2%
+      only_pulls: false
+      branches: 
+        - main
+      flags: null
+      paths: null

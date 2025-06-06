@@ -9,6 +9,8 @@
 
 # Ignore all environment files.
 /.env*
+!/.env.example
+!/.env.test
 
 # Ignore all logfiles and tempfiles.
 /log/*
@@ -32,3 +34,146 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+/config/credentials/*.key
+
+# Ignore code coverage files
+/coverage/
+.resultset.json
+
+# Development specific
+/db/*.sqlite3
+/db/*.sqlite3-*
+.byebug_history
+.pry_history
+.irb_history
+
+# IDE and Editor specific
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.settings
+.classpath
+*.sublime-workspace
+*.sublime-project
+.nova/
+
+# Testing artifacts
+/tmp/screenshots/
+/tmp/capybara/
+/test/reports/
+/spec/reports/
+/spec/examples.txt
+.rspec_status
+
+# Documentation
+/doc/api/
+/doc/app/
+.yardoc
+.yardopts
+
+# Node/JavaScript (for future use)
+/node_modules/
+/yarn-error.log
+yarn-debug.log*
+.yarn-integrity
+/public/packs
+/public/packs-test
+
+# Security and sensitive data
+/config/secrets.yml
+/config/database.yml.local
+*.pem
+*.key
+*.crt
+*.p12
+.ssl/
+
+# Performance profiling
+/tmp/profile/
+*.dump
+*.prof
+*.trace
+
+# Business data exports (should never be committed)
+/exports/
+/reports/*.xlsx
+/reports/*.csv
+/data_dumps/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.Spotlight-V100
+.Trashes
+
+# Ruby specific
+*.gem
+*.rbc
+/.config
+/InstalledFiles
+/pkg/
+/spec/fixtures/vcr_cassettes/
+
+# Rails specific
+/public/system
+/public/uploads
+.generators
+.rakeTasks
+
+# Development tools
+.foreman
+.guard_history
+.powder
+.rvmrc
+.ruby-version
+.ruby-gemset
+.tool-versions
+
+# Code quality tools
+.rubocop-*
+.reek.yml.local
+.codeclimate.yml.local
+/brakeman-output.*
+
+# Deployment
+/deploy/
+*.tar.gz
+*.zip
+
+# Local development overrides
+/config/application.yml.local
+/config/settings.local.yml
+/config/settings/*.local.yml
+/config/environments/*.local.rb
+
+# Temporary Excel files (common in financial apps)
+~$*.xlsx
+~$*.xls
+*.xlk
+
+# Database dumps and seeds
+/db/dumps/
+/db/data/
+*.sql
+!db/structure.sql
+
+# Performance and debugging
+/tmp/performance/
+/tmp/letter_opener/
+/tmp/email_previews/
+
+# Keep important directories
+!.keep
+!.gitkeep

@@ -1,6 +1,7 @@
+<!-- markdownlint-disable MD025 -->
 # 1. Background & Goals
 
-## Current Situation:
+## Current Situation
 
 Company's transactional contracts data is stored in a large Excel file that tracks every closed/won sales deal (as well as renewals, upgrades/downgrades, cancels, & de-books). Key issues include:
 
@@ -8,7 +9,7 @@ Company's transactional contracts data is stored in a large Excel file that trac
 • **Accessibility:** The file is stored on a network drive and editable by only one person at a time if and only if they have access to the Finance shared drive, and are either in a Company office, or connected to the Company VPN.
 • **Scalability & Collaboration:** Limited support for multi-user access and concurrent data manipulation.
 
-## Goals for the New System:
+## Goals for the New System
 
 • Replace the Excel file with a robust, multi-user, database-backed system.
 • Ensure fast performance, high availability, and secure access.
@@ -22,36 +23,40 @@ Company's transactional contracts data is stored in a large Excel file that trac
 Our new system should capture the key sales deal attributes and support relationships between them. Suggested core entities include:
 
 • **Order:**
-  - **Order Number:** A unique identifier for each deal.
-  - **Sold Date:** The date the deal was closed.
-  - **TCV (Total Contract Value):** Total deal value incorporating escalators and one-time fees.
+
+- **Order Number:** A unique identifier for each deal.
+- **Sold Date:** The date the deal was closed.
+- **TCV (Total Contract Value):** Total deal value incorporating escalators and one-time fees.
 
 • **Customer:**
-  - **Customer Name:** The full name or company name.
-  - **Customer ID:** Unique identifier for each customer (could potentially re-use Accounting Information System customer ID)
-  - **Contact Details:** (Optional) Email, phone, and address information (billing contact, technical contact, etc).
+
+- **Customer Name:** The full name or company name.
+- **Customer ID:** Unique identifier for each customer (could potentially re-use Accounting Information System customer ID)
+- **Contact Details:** (Optional) Email, phone, and address information (billing contact, technical contact, etc).
 
 • **Service:**
   For each service in an order, track:
-  - **Service Type/Name:** What service was sold.
-  - **Term Length:** Number of months for the service (may vary per service within one order).
-  - **Service Status:** Enum values such as pending installation, active, extended (beyond contract term), canceled, or renewed.
-  - **Service Start and End Dates:** Dates effective once installation begins.
-  - **Units:** Quantity or other measure depending on the service type.
-  - **Unit Price:** Cost per unit.
-  - **NRCs:** Any non-recurring fees associated with the service.
+
+- **Service Type/Name:** What service was sold.
+- **Term Length:** Number of months for the service (may vary per service within one order).
+- **Service Status:** Enum values such as pending installation, active, extended (beyond contract term), canceled, or renewed.
+- **Service Start and End Dates:** Dates effective once installation begins.
+- **Units:** Quantity or other measure depending on the service type.
+- **Unit Price:** Cost per unit.
+- **NRCs:** Any non-recurring fees associated with the service.
 
 • **Revenue & Calculations:**
   These fields may be computed fields or stored for historical record:
-  - **MRR (Monthly Recurring Revenue)**
-  - **ARR (Annual Recurring Revenue)**
-  - **GAAP MRR:** Calculated by taking the TCV minus any NRCs, then dividing by the contract term.
-  - **Annual Escalator:** The percentage increase applied yearly.
-  - **Dynamic TCV Calculation:** Should incorporate annual escalators and other adjustments, uses formula for the future value of an annuity due + NRCs to calculate:
-    - FV(Annuity Due) = C × [(1+i)^n - 1 / i] × (1+i) + NRCs
-      - C = cash flow per period
-      - i = interest rate
-      - n = number of payments
+
+- **MRR (Monthly Recurring Revenue)**
+- **ARR (Annual Recurring Revenue)**
+- **GAAP MRR:** Calculated by taking the TCV minus any NRCs, then dividing by the contract term.
+- **Annual Escalator:** The percentage increase applied yearly.
+- **Dynamic TCV Calculation:** Should incorporate annual escalators and other adjustments, uses formula for the future value of an annuity due + NRCs to calculate:
+  - FV(Annuity Due) = C × [(1+i)^n - 1 / i] × (1+i) + NRCs
+    - C = cash flow per period
+    - i = interest rate
+    - n = number of payments
 
 ## 2.2 Transaction Management & CRUD Operations
 
@@ -63,44 +68,48 @@ Our new system should capture the key sales deal attributes and support relation
 
 • **Dynamic Revenue Calculations:**
   The system should support automated computation of:
-  - MRR, ARR, GAAP MRR based on input data.
-  - Adjustments due to varying term lengths or changes in escalator percentages.
+
+- MRR, ARR, GAAP MRR based on input data.
+- Adjustments due to varying term lengths or changes in escalator percentages.
 
 • **Service Status Transitions:** Provide workflows for updating a service's status (such as transitioning from "pending installation" to "active").
 
 • **Renewals/Upgrades/Downgrades**
-  - Any subsequent transaction that is somehow modifying a previously won contract should only track the net new MRR/TCV/other metric.
-    - Example 1: order ABC for 1 cabinet and 2kW of power for $1,000 baseline MRR and 36 months @ 3% annual escalator is renewed by order DEF at the end of the initial term for $1,100 baseline MRR for an additional 36 months at the same annual escalator, and billing for the renewal doesn't start until the full initial term is complete:
-      - Order ABC Baseline MRR = $1,000, GAAP MRR = $1,030.30, TCV = $37,090.80
-      - Order DEF Baseline MRR = $1,100, GAAP MRR = $1,133.33, TCV = $40,799.88
-      - At the time of renewal, the net incremental MRR is $100 (renewal order baseline MRR – original order baseline MRR), however incremental TCV is the full $40,799.88.
-    - Example 2: same details as example 1, except the customer wants the renewal to start right away (say for example if they are buying other services and want the existing services to co-term with their new services, and let's say the renewal rate would kick in 3 months prior to the end of the initial term), DEF contract term is still for 36 months:
-      - Order ABC Baseline MRR = $1,000, GAAP MRR = $1,030.30, TCV = $37,090.80
-      - Order DEF Baseline MRR = $1,100, TCV = $40,799.88 **LESS** 3 months' worth of order ABC
-        - The last three months of order ABC is worth $3,182.70
-        - Order DEF TCV is then $37,617.18, and thus GAAP MRR = $1,044.92, and net incremental MRR is still $100
-  - Transactions modifying a previously won contract should keep track of the "original order" so we can track the life of an order
+
+- Any subsequent transaction that is somehow modifying a previously won contract should only track the net new MRR/TCV/other metric.
+  - Example 1: order ABC for 1 cabinet and 2kW of power for $1,000 baseline MRR and 36 months @ 3% annual escalator is renewed by order DEF at the end of the initial term for $1,100 baseline MRR for an additional 36 months at the same annual escalator, and billing for the renewal doesn't start until the full initial term is complete:
+    - Order ABC Baseline MRR = $1,000, GAAP MRR = $1,030.30, TCV = $37,090.80
+    - Order DEF Baseline MRR = $1,100, GAAP MRR = $1,133.33, TCV = $40,799.88
+    - At the time of renewal, the net incremental MRR is $100 (renewal order baseline MRR – original order baseline MRR), however incremental TCV is the full $40,799.88.
+  - Example 2: same details as example 1, except the customer wants the renewal to start right away (say for example if they are buying other services and want the existing services to co-term with their new services, and let's say the renewal rate would kick in 3 months prior to the end of the initial term), DEF contract term is still for 36 months:
+    - Order ABC Baseline MRR = $1,000, GAAP MRR = $1,030.30, TCV = $37,090.80
+    - Order DEF Baseline MRR = $1,100, TCV = $40,799.88 **LESS** 3 months' worth of order ABC
+      - The last three months of order ABC is worth $3,182.70
+      - Order DEF TCV is then $37,617.18, and thus GAAP MRR = $1,044.92, and net incremental MRR is still $100
+- Transactions modifying a previously won contract should keep track of the "original order" so we can track the life of an order
 
 • **Alerts & Notifications:**
   Trigger alerts for events like:
-  - Upcoming service start/end dates.
-  - Contracts nearing renewal or exceeding term length.
+
+- Upcoming service start/end dates.
+- Contracts nearing renewal or exceeding term length.
 
 ## 2.4 Reporting & Analytics
 
 • **Custom Reports:**
   Ability to generate real-time reports and dashboards covering:
-  - Sales performance over time (e.g., total TCV, aggregated MRR/ARR).
-  - Rent Roll as of a given date showing which customers have services (active or pending install) per site, the MRR, TCV, NOI, kW, & cabinets
-  - BBNB – booked but not billed – as of a given date showing per site MRR, TCV, NOI, kW, & cabinets
-  - Billing and rev rec schedules at varying levels of aggregation
-  - Churn reporting:
-    - We define churn as the reduction of the installed revenue base (cancels and downgrades)
-    - De-books were never installed, thus shouldn't be included in churn reporting
-  - Renewals reporting:
-    - Contracts/services up for renewal in the next "n" months (determined at report runtime)
-    - Ability to show the original MRR (e.g. initial contract), renewed MRR (new contract), uplift/downgrade over/below original MRR, and non-renewed services
-  - Operational reporting: friendly output for Ops personnel to tick and tie their layout maps to, ensuring we're in sync (customer, kW, cabinet count)
+
+- Sales performance over time (e.g., total TCV, aggregated MRR/ARR).
+- Rent Roll as of a given date showing which customers have services (active or pending install) per site, the MRR, TCV, NOI, kW, & cabinets
+- BBNB – booked but not billed – as of a given date showing per site MRR, TCV, NOI, kW, & cabinets
+- Billing and rev rec schedules at varying levels of aggregation
+- Churn reporting:
+  - We define churn as the reduction of the installed revenue base (cancels and downgrades)
+  - De-books were never installed, thus shouldn't be included in churn reporting
+- Renewals reporting:
+  - Contracts/services up for renewal in the next "n" months (determined at report runtime)
+  - Ability to show the original MRR (e.g. initial contract), renewed MRR (new contract), uplift/downgrade over/below original MRR, and non-renewed services
+- Operational reporting: friendly output for Ops personnel to tick and tie their layout maps to, ensuring we're in sync (customer, kW, cabinet count)
 
 • **Filtering & Drill-Down Capabilities:** Users should be able to filter by customer, service type, date ranges, or status, sales rep, site, etc.
 • **Historical Analysis:** Track changes over time, including service updates, renewals, or cancellations.
