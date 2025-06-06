@@ -60,10 +60,12 @@ jobs:
 
       - name: Scan for secrets
         uses: trufflesecurity/trufflehog@main
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000')
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
+          base: ${{ github.event.before }}
+          head: ${{ github.event.after }}
+          extra_args: --only-verified
 
   # JavaScript security scanning
   scan_js:
