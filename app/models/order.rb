@@ -12,7 +12,7 @@ class Order < ApplicationRecord
 
   # Associations
   belongs_to :customer
-  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :created_by, class_name: "User"
   belongs_to :original_order, class_name: "Order", optional: true
   has_many :renewal_orders, class_name: "Order", foreign_key: "original_order_id",
            dependent: :restrict_with_error, inverse_of: :original_order
@@ -160,7 +160,7 @@ class Order < ApplicationRecord
       recurring_revenue = (service.tcv || 0) - (service.nrcs || 0)
       if recurring_revenue.positive?
         total_recurring += recurring_revenue
-        weighted_months += service.term_months * recurring_revenue
+        weighted_months += service.term_months_as_delivered * recurring_revenue
       end
     end
 

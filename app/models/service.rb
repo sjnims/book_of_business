@@ -24,9 +24,9 @@ class Service < ApplicationRecord
   validates :service_name, presence: true
   validates :service_type, inclusion: { in: SERVICE_TYPES }
   validates :status, inclusion: { in: STATUSES }
-  validates :term_months, numericality: { greater_than: 0, only_integer: true }
-  validates :billing_start_date, presence: true
-  validates :rev_rec_start_date, presence: true
+  validates :term_months_as_sold, numericality: { greater_than: 0, only_integer: true }
+  validates :billing_start_date_as_sold, presence: true
+  validates :rev_rec_start_date_as_sold, presence: true
   validates :units, numericality: true
   validates :unit_price, numericality: { greater_than_or_equal_to: 0 }
   validates :nrcs, numericality: true
@@ -40,12 +40,13 @@ class Service < ApplicationRecord
   scope :active, -> { where(status: "active") }
   scope :by_status, ->(status) { where(status: status) }
   scope :by_type, ->(type) { where(service_type: type) }
-  scope :expiring_soon, -> { active.where(billing_end_date: Date.current..30.days.from_now) }
-  scope :expired, -> { where("billing_end_date < ?", Date.current) }
-  scope :needs_extension, -> { active.where("billing_end_date < ?", Date.current) }
+  scope :expiring_soon, -> { active.where(billing_end_date_as_delivered: Date.current..30.days.from_now) }
+  scope :expired, -> { where("billing_end_date_as_delivered < ?", Date.current) }
+  scope :needs_extension, -> { active.where("billing_end_date_as_delivered < ?", Date.current) }
 
   # Callbacks
   before_validation :calculate_end_dates_from_term
+  before_validation :sync_as_delivered_with_as_sold
   before_save :calculate_revenue_fields
 
   # Audit configuration - track all service changes
@@ -69,9 +70,9 @@ class Service < ApplicationRecord
 
   # Checks if the service has expired based on billing end date
   #
-  # Returns true if billing_end_date is before current date, false otherwise
+  # Returns true if billing_end_date_as_delivered is before current date, false otherwise
   def expired?
-    billing_end_date < Date.current
+    billing_end_date_as_delivered < Date.current
   end
 
   # Status transition methods
@@ -140,21 +141,23 @@ class Service < ApplicationRecord
   #
   # Returns true if status is active and past billing end date
   def should_be_extended?
-    status == "active" && billing_end_date < Date.current
+    status == "active" && billing_end_date_as_delivered < Date.current
   end
 
   # Checks if the service is active and expiring within 30 days
   #
-  # Returns true if active and billing_end_date is within next 30 days, false otherwise
+  # Returns true if active and billing_end_date_as_delivered is within next 30 days, false otherwise
   def expiring_soon?
-    active? && billing_end_date.between?(Date.current, 30.days.from_now)
+    return false unless billing_end_date_as_delivered
+    active? && billing_end_date_as_delivered.between?(Date.current, 30.days.from_now)
   end
 
   # Calculates the number of days until service billing expiration
   #
   # Returns Integer number of days (negative if already expired)
   def days_remaining
-    (billing_end_date - Date.current).to_i
+    return 0 unless billing_end_date_as_delivered
+    (billing_end_date_as_delivered - Date.current).to_i
   end
 
   # Calculates the base monthly recurring charge before escalations
@@ -187,9 +190,29 @@ class Service < ApplicationRecord
 
   # Calculates the GAAP Monthly Recurring Revenue
   #
-  # Returns Float representing (TCV - NRCs) / term_months
+  # Returns Float representing (TCV - NRCs) / term_months_as_delivered
   def calculate_gaap_mrr
     revenue_calculator.calculate_gaap_mrr
+  end
+
+  # Extends the service by the specified number of months
+  # Updates the as_delivered dates while preserving as_sold dates
+  #
+  # Returns true if extension successful, false otherwise
+  def extend_by_months(months)
+    return false unless can_extend?
+
+    self.term_months_as_delivered += months
+    self.billing_end_date_as_delivered = billing_start_date_as_delivered + term_months_as_delivered.months - 1.day
+    self.rev_rec_end_date_as_delivered = rev_rec_start_date_as_delivered + term_months_as_delivered.months - 1.day
+    save
+  end
+
+  # Checks if the service can be extended
+  #
+  # Returns true if status is active or extended, false otherwise
+  def can_extend?
+    [ "active", "extended" ].include?(status)
   end
 
   # Calculates net new value compared to an original service (for renewals/upgrades)
@@ -209,25 +232,32 @@ class Service < ApplicationRecord
   private
 
   def end_dates_after_start_dates
-    # Validate billing dates
-    errors.add(:billing_end_date, "must be after billing start date") if billing_start_date && billing_end_date && billing_end_date <= billing_start_date
+    # Validate as_sold billing dates
+    errors.add(:billing_end_date_as_sold, "must be after billing start date") if billing_start_date_as_sold && billing_end_date_as_sold && billing_end_date_as_sold <= billing_start_date_as_sold
 
-    # Validate revenue recognition dates
-    return unless rev_rec_start_date && rev_rec_end_date && rev_rec_end_date <= rev_rec_start_date
+    # Validate as_sold revenue recognition dates
+    errors.add(:rev_rec_end_date_as_sold, "must be after revenue recognition start date") if rev_rec_start_date_as_sold && rev_rec_end_date_as_sold && rev_rec_end_date_as_sold <= rev_rec_start_date_as_sold
 
-    errors.add(:rev_rec_end_date, "must be after revenue recognition start date")
+    # Validate as_delivered billing dates
+    errors.add(:billing_end_date_as_delivered, "must be after billing start date") if billing_start_date_as_delivered && billing_end_date_as_delivered && billing_end_date_as_delivered <= billing_start_date_as_delivered
+
+    # Validate as_delivered revenue recognition dates
+    return unless rev_rec_start_date_as_delivered && rev_rec_end_date_as_delivered && rev_rec_end_date_as_delivered <= rev_rec_start_date_as_delivered
+      errors.add(:rev_rec_end_date_as_delivered, "must be after revenue recognition start date")
   end
 
   def term_matches_billing_dates
-    return unless billing_start_date && billing_end_date && term_months
+    # Validate as_sold term matches billing dates
+    if billing_start_date_as_sold && billing_end_date_as_sold && term_months_as_sold
+      expected_end_date = billing_start_date_as_sold + term_months_as_sold.months - 1.day
+      errors.add(:term_months_as_sold, "doesn't match the as_sold billing date range") unless billing_end_date_as_sold >= expected_end_date - 1.day && billing_end_date_as_sold <= expected_end_date + 1.day
+    end
 
-    # Calculate the expected end date based on term_months
-    expected_end_date = billing_start_date + term_months.months - 1.day
-
-    # Allow for minor date variations (e.g., month-end differences)
-    return if billing_end_date >= expected_end_date - 1.day && billing_end_date <= expected_end_date + 1.day
-
-    errors.add(:term_months, "doesn't match the billing date range")
+    # Validate as_delivered term matches billing dates
+    return unless billing_start_date_as_delivered && billing_end_date_as_delivered && term_months_as_delivered
+      expected_end_date = billing_start_date_as_delivered + term_months_as_delivered.months - 1.day
+      return if billing_end_date_as_delivered >= expected_end_date - 1.day && billing_end_date_as_delivered <= expected_end_date + 1.day
+        errors.add(:term_months_as_delivered, "doesn't match the as_delivered billing date range")
   end
 
   def units_sign_validation
@@ -280,13 +310,28 @@ class Service < ApplicationRecord
   end
 
   def calculate_end_dates_from_term
-    # Calculate billing end date if not provided
-    self.billing_end_date = billing_start_date + term_months.months - 1.day if billing_start_date.present? && term_months.present? && billing_end_date.blank?
+    # Calculate as_sold billing end date if not provided
+    self.billing_end_date_as_sold = billing_start_date_as_sold + term_months_as_sold.months - 1.day if billing_start_date_as_sold.present? && term_months_as_sold.present? && billing_end_date_as_sold.blank?
 
-    # Calculate rev rec end date if not provided
-    return unless rev_rec_start_date.present? && term_months.present? && rev_rec_end_date.blank?
+    # Calculate as_sold rev rec end date if not provided
+    self.rev_rec_end_date_as_sold = rev_rec_start_date_as_sold + term_months_as_sold.months - 1.day if rev_rec_start_date_as_sold.present? && term_months_as_sold.present? && rev_rec_end_date_as_sold.blank?
 
-    self.rev_rec_end_date = rev_rec_start_date + term_months.months - 1.day
+    # Calculate as_delivered billing end date if not provided
+    self.billing_end_date_as_delivered = billing_start_date_as_delivered + term_months_as_delivered.months - 1.day if billing_start_date_as_delivered.present? && term_months_as_delivered.present? && billing_end_date_as_delivered.blank?
+
+    # Calculate as_delivered rev rec end date if not provided
+    return unless rev_rec_start_date_as_delivered.present? && term_months_as_delivered.present? && rev_rec_end_date_as_delivered.blank?
+      self.rev_rec_end_date_as_delivered = rev_rec_start_date_as_delivered + term_months_as_delivered.months - 1.day
+  end
+
+  def sync_as_delivered_with_as_sold
+    # For new records, initialize as_delivered fields from as_sold if not set
+    return unless new_record?
+      self.term_months_as_delivered ||= term_months_as_sold
+      self.billing_start_date_as_delivered ||= billing_start_date_as_sold
+      self.billing_end_date_as_delivered ||= billing_end_date_as_sold
+      self.rev_rec_start_date_as_delivered ||= rev_rec_start_date_as_sold
+      self.rev_rec_end_date_as_delivered ||= rev_rec_end_date_as_sold
   end
 
   def calculate_revenue_fields

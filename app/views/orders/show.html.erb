@@ -64,7 +64,7 @@
           <h3>Metadata</h3>
           <dl class="details-list">
             <dt>Created By</dt>
-            <dd><%= @order.created_by&.email || "System" %></dd>
+            <dd><%= @order.created_by&.name || "System" %></dd>
             
             <dt>Created At</dt>
             <dd><%= @order.created_at.strftime("%B %d, %Y %I:%M %p") %></dd>
@@ -102,8 +102,8 @@
                 <tr>
                   <td><%= service.service_type %></td>
                   <td><%= service.status&.humanize %></td>
-                  <td><%= service.billing_start_date&.strftime("%Y-%m-%d") %></td>
-                  <td><%= service.billing_end_date&.strftime("%Y-%m-%d") %></td>
+                  <td><%= service.billing_start_date_as_delivered&.strftime("%Y-%m-%d") %></td>
+                  <td><%= service.billing_end_date_as_delivered&.strftime("%Y-%m-%d") %></td>
                   <td class="text-right"><%= number_to_currency(service.mrr) %></td>
                   <td class="text-right"><%= number_to_currency(service.nrcs) %></td>
                   <td class="actions">

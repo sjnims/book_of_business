@@ -76,11 +76,13 @@ class ServicesController < ApplicationController
 
   def service_params
     params.require(:service).permit(
-      :service_type, :service_name, :term_months, :status,
+      :service_type, :service_name, :term_months_as_sold, :status,
       :units, :unit_price, :nrcs, :annual_escalator,
-      :billing_start_date, :billing_end_date,
-      :rev_rec_start_date, :rev_rec_end_date,
-      :site
+      :billing_start_date_as_sold, :billing_end_date_as_sold,
+      :rev_rec_start_date_as_sold, :rev_rec_end_date_as_sold,
+      :term_months_as_delivered, :billing_start_date_as_delivered,
+      :billing_end_date_as_delivered, :rev_rec_start_date_as_delivered,
+      :rev_rec_end_date_as_delivered, :site
     )
   end
 

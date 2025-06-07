@@ -7,37 +7,109 @@
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-body">
-      <dl class="details-list">
-        <dt>Service Type</dt>
-        <dd><%= @service.service_type %></dd>
-        
-        <dt>Service Name</dt>
-        <dd><%= @service.service_name %></dd>
-        
-        <dt>Status</dt>
-        <dd>
-          <span class="badge <%= "badge-#{@service.status}" %>">
-            <%= @service.status&.humanize %>
-          </span>
-        </dd>
-        
-        <dt>Term</dt>
-        <dd><%= @service.term_months %> months</dd>
-        
-        <dt>Units</dt>
-        <dd><%= @service.units %></dd>
-        
-        <dt>Unit Price</dt>
-        <dd><%= number_to_currency(@service.unit_price) %></dd>
-        
-        <dt>MRR</dt>
-        <dd><%= number_to_currency(@service.mrr) %></dd>
-        
-        <dt>NRCs</dt>
-        <dd><%= number_to_currency(@service.nrcs) %></dd>
-      </dl>
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <div class="card-header">
+          <h3>Service Details</h3>
+        </div>
+        <div class="card-body">
+          <dl class="details-list">
+            <dt>Service Type</dt>
+            <dd><%= @service.service_type %></dd>
+            
+            <dt>Service Name</dt>
+            <dd><%= @service.service_name %></dd>
+            
+            <dt>Status</dt>
+            <dd>
+              <span class="badge <%= "badge-#{@service.status}" %>">
+                <%= @service.status&.humanize %>
+              </span>
+            </dd>
+            
+            <dt>Site</dt>
+            <dd><%= @service.site.presence || "Not specified" %></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Pricing</h3>
+        </div>
+        <div class="card-body">
+          <dl class="details-list">
+            <dt>Units</dt>
+            <dd><%= @service.units %></dd>
+            
+            <dt>Unit Price</dt>
+            <dd><%= number_to_currency(@service.unit_price) %></dd>
+            
+            <dt>MRR</dt>
+            <dd><%= number_to_currency(@service.mrr) %></dd>
+            
+            <dt>NRCs</dt>
+            <dd><%= number_to_currency(@service.nrcs) %></dd>
+            
+            <dt>Annual Escalator</dt>
+            <dd><%= @service.annual_escalator %>%</dd>
+            
+            <dt>TCV</dt>
+            <dd><%= number_to_currency(@service.tcv) %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card">
+        <div class="card-header">
+          <h3>Contract Terms - As Sold</h3>
+        </div>
+        <div class="card-body">
+          <dl class="details-list">
+            <dt>Term</dt>
+            <dd><%= @service.term_months_as_sold %> months</dd>
+            
+            <dt>Billing Start Date</dt>
+            <dd><%= @service.billing_start_date_as_sold&.strftime("%B %d, %Y") || "Not set" %></dd>
+            
+            <dt>Billing End Date</dt>
+            <dd><%= @service.billing_end_date_as_sold&.strftime("%B %d, %Y") || "Not set" %></dd>
+            
+            <dt>Rev Rec Start Date</dt>
+            <dd><%= @service.rev_rec_start_date_as_sold&.strftime("%B %d, %Y") || "Not set" %></dd>
+            
+            <dt>Rev Rec End Date</dt>
+            <dd><%= @service.rev_rec_end_date_as_sold&.strftime("%B %d, %Y") || "Not set" %></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Contract Terms - As Delivered</h3>
+        </div>
+        <div class="card-body">
+          <dl class="details-list">
+            <dt>Term</dt>
+            <dd><%= @service.term_months_as_delivered %> months</dd>
+            
+            <dt>Billing Start Date</dt>
+            <dd><%= @service.billing_start_date_as_delivered&.strftime("%B %d, %Y") || "Not set" %></dd>
+            
+            <dt>Billing End Date</dt>
+            <dd><%= @service.billing_end_date_as_delivered&.strftime("%B %d, %Y") || "Not set" %></dd>
+            
+            <dt>Rev Rec Start Date</dt>
+            <dd><%= @service.rev_rec_start_date_as_delivered&.strftime("%B %d, %Y") || "Not set" %></dd>
+            
+            <dt>Rev Rec End Date</dt>
+            <dd><%= @service.rev_rec_end_date_as_delivered&.strftime("%B %d, %Y") || "Not set" %></dd>
+          </dl>
+        </div>
+      </div>
     </div>
   </div>
 

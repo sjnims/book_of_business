@@ -84,36 +84,65 @@
 
       <div class="row">
         <div class="col">
-          <h3>Contract Terms</h3>
+          <h3>Contract Terms - As Sold</h3>
           
           <div class="form-group">
-            <%= form.label :term_months %>
-            <%= form.number_field :term_months, class: "form-control", required: true %>
+            <%= form.label :term_months_as_sold, "Term (months)" %>
+            <%= form.number_field :term_months_as_sold, class: "form-control", required: true %>
           </div>
 
           <div class="form-group">
-            <%= form.label :billing_start_date %>
-            <%= form.date_field :billing_start_date, class: "form-control", required: true %>
+            <%= form.label :billing_start_date_as_sold, "Billing Start Date" %>
+            <%= form.date_field :billing_start_date_as_sold, class: "form-control", required: true %>
           </div>
 
           <div class="form-group">
-            <%= form.label :billing_end_date %>
-            <%= form.date_field :billing_end_date, class: "form-control" %>
+            <%= form.label :billing_end_date_as_sold, "Billing End Date" %>
+            <%= form.date_field :billing_end_date_as_sold, class: "form-control" %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :rev_rec_start_date_as_sold, "Rev Rec Start Date" %>
+            <%= form.date_field :rev_rec_start_date_as_sold, class: "form-control" %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :rev_rec_end_date_as_sold, "Rev Rec End Date" %>
+            <%= form.date_field :rev_rec_end_date_as_sold, class: "form-control" %>
           </div>
         </div>
 
         <div class="col">
-          <h3>Revenue Recognition</h3>
+          <h3>Contract Terms - As Delivered</h3>
           
-          <div class="form-group">
-            <%= form.label :rev_rec_start_date %>
-            <%= form.date_field :rev_rec_start_date, class: "form-control" %>
-          </div>
+          <% if service.persisted? %>
+            <div class="form-group">
+              <%= form.label :term_months_as_delivered, "Term (months)" %>
+              <%= form.number_field :term_months_as_delivered, class: "form-control" %>
+            </div>
 
-          <div class="form-group">
-            <%= form.label :rev_rec_end_date %>
-            <%= form.date_field :rev_rec_end_date, class: "form-control" %>
-          </div>
+            <div class="form-group">
+              <%= form.label :billing_start_date_as_delivered, "Billing Start Date" %>
+              <%= form.date_field :billing_start_date_as_delivered, class: "form-control" %>
+            </div>
+
+            <div class="form-group">
+              <%= form.label :billing_end_date_as_delivered, "Billing End Date" %>
+              <%= form.date_field :billing_end_date_as_delivered, class: "form-control" %>
+            </div>
+
+            <div class="form-group">
+              <%= form.label :rev_rec_start_date_as_delivered, "Rev Rec Start Date" %>
+              <%= form.date_field :rev_rec_start_date_as_delivered, class: "form-control" %>
+            </div>
+
+            <div class="form-group">
+              <%= form.label :rev_rec_end_date_as_delivered, "Rev Rec End Date" %>
+              <%= form.date_field :rev_rec_end_date_as_delivered, class: "form-control" %>
+            </div>
+          <% else %>
+            <p class="text-muted">As Delivered fields will be available after the service is created.</p>
+          <% end %>
         </div>
       </div>
 

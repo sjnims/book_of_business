@@ -20,16 +20,16 @@ class ServicesControllerTest < ActionDispatch::IntegrationTest
       post order_services_url(@order), params: { service: {
         service_type: "internet",
         service_name: "100 Mbps Connection",
-        term_months: 24,
+        term_months_as_sold: 24,
         status: "pending_installation",
         units: 1,
         unit_price: 1000,
         nrcs: 500,
         annual_escalator: 3,
-        billing_start_date: Time.zone.today,
-        billing_end_date: Time.zone.today + 24.months,
-        rev_rec_start_date: Time.zone.today,
-        rev_rec_end_date: Time.zone.today + 24.months,
+        billing_start_date_as_sold: Time.zone.today,
+        billing_end_date_as_sold: Time.zone.today + 24.months,
+        rev_rec_start_date_as_sold: Time.zone.today,
+        rev_rec_end_date_as_sold: Time.zone.today + 24.months,
         site: "NYC",
       } }
     end
@@ -75,7 +75,7 @@ class ServicesControllerTest < ActionDispatch::IntegrationTest
       post order_services_url(@order), params: { service: {
         service_type: "",
         service_name: "",
-        term_months: nil,
+        term_months_as_sold: nil,
         units: nil,
         unit_price: nil,
       } }
@@ -89,7 +89,7 @@ class ServicesControllerTest < ActionDispatch::IntegrationTest
     patch order_service_url(@order, @service), params: { service: {
       service_type: "",
       service_name: "",
-      term_months: -1,
+      term_months_as_sold: -1,
       units: 0,
       unit_price: -100,
     } }

@@ -9,6 +9,7 @@ order_one:
   baseline_mrr: 1000.00
   gaap_mrr: 1000.00
   notes: First order
+  created_by: admin
 
 order_two:
   customer: globex
@@ -18,6 +19,7 @@ order_two:
   tcv: 30000.00
   baseline_mrr: 500.00
   gaap_mrr: 500.00
+  created_by: admin
 
 renewal_order:
   customer: acme
@@ -29,3 +31,4 @@ renewal_order:
   baseline_mrr: 1100.00
   gaap_mrr: 1100.00
   notes: Renewal with 10% increase
+  created_by: admin

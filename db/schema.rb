@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_07_181501) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_07_202345) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -83,6 +83,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_07_181501) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "created_by_id", null: false
+    t.index ["created_by_id"], name: "index_orders_on_created_by_id"
     t.index ["customer_id"], name: "index_orders_on_customer_id"
     t.index ["order_number"], name: "index_orders_on_order_number", unique: true
     t.index ["order_type"], name: "index_orders_on_order_type"
@@ -96,7 +98,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_07_181501) do
     t.bigint "order_id", null: false
     t.string "service_type"
     t.string "service_name"
-    t.integer "term_months"
+    t.integer "term_months_as_sold"
     t.string "status"
     t.decimal "units", precision: 10, scale: 2
     t.decimal "unit_price", precision: 15, scale: 2
@@ -108,15 +110,24 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_07_181501) do
     t.string "site"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.date "billing_start_date"
-    t.date "billing_end_date"
-    t.date "rev_rec_start_date"
-    t.date "rev_rec_end_date"
-    t.index ["billing_end_date"], name: "index_services_on_billing_end_date"
-    t.index ["billing_start_date"], name: "index_services_on_billing_start_date"
+    t.date "billing_start_date_as_sold"
+    t.date "billing_end_date_as_sold"
+    t.date "rev_rec_start_date_as_sold"
+    t.date "rev_rec_end_date_as_sold"
+    t.integer "term_months_as_delivered"
+    t.date "billing_start_date_as_delivered"
+    t.date "billing_end_date_as_delivered"
+    t.date "rev_rec_start_date_as_delivered"
+    t.date "rev_rec_end_date_as_delivered"
+    t.index ["billing_end_date_as_delivered"], name: "index_services_on_billing_end_date_as_delivered"
+    t.index ["billing_end_date_as_sold"], name: "index_services_on_billing_end_date_as_sold"
+    t.index ["billing_start_date_as_delivered"], name: "index_services_on_billing_start_date_as_delivered"
+    t.index ["billing_start_date_as_sold"], name: "index_services_on_billing_start_date_as_sold"
     t.index ["order_id"], name: "index_services_on_order_id"
-    t.index ["rev_rec_end_date"], name: "index_services_on_rev_rec_end_date"
-    t.index ["rev_rec_start_date"], name: "index_services_on_rev_rec_start_date"
+    t.index ["rev_rec_end_date_as_delivered"], name: "index_services_on_rev_rec_end_date_as_delivered"
+    t.index ["rev_rec_end_date_as_sold"], name: "index_services_on_rev_rec_end_date_as_sold"
+    t.index ["rev_rec_start_date_as_delivered"], name: "index_services_on_rev_rec_start_date_as_delivered"
+    t.index ["rev_rec_start_date_as_sold"], name: "index_services_on_rev_rec_start_date_as_sold"
     t.index ["service_type"], name: "index_services_on_service_type"
     t.index ["site"], name: "index_services_on_site"
     t.index ["status"], name: "index_services_on_status"
@@ -138,5 +149,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_07_181501) do
   add_foreign_key "audit_logs", "users"
   add_foreign_key "orders", "customers"
   add_foreign_key "orders", "orders", column: "original_order_id"
+  add_foreign_key "orders", "users", column: "created_by_id"
   add_foreign_key "services", "orders"
 end

@@ -91,6 +91,11 @@ module ActiveSupport
 
     # Add more helper methods to be used by all tests here...
 
+    # Helper method to get a test user for created_by associations
+    def default_test_user
+      @default_test_user ||= users(:admin)
+    end
+
     # Helper method to clean database for tests that need isolation from fixtures
     def clean_database!
       # Disable audit logging during cleanup

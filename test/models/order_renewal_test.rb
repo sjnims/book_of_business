@@ -12,7 +12,8 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_number: "REN-001",
       order_type: "renewal",
       sold_date: Time.zone.today,
-      tcv: @original_order.tcv * 1.1  # 10% increase
+      tcv: @original_order.tcv * 1.1,  # 10% increase
+      created_by: users(:admin)
     )
 
     assert_not renewal.valid?
@@ -26,7 +27,8 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_type: "renewal",
       sold_date: Time.zone.today,
       tcv: @original_order.tcv * 1.1,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     assert_predicate renewal, :valid?, renewal.errors.full_messages.join(", ")
@@ -52,7 +54,8 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_type: "renewal",
       sold_date: Time.zone.today - 365.days,
       tcv: 55_000,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     # Second renewal (renewal of a renewal)
@@ -62,7 +65,8 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_type: "renewal",
       sold_date: Time.zone.today,
       tcv: 60_000,
-      original_order: first_renewal
+      original_order: first_renewal,
+      created_by: users(:admin)
     )
 
     assert_equal @original_order, first_renewal.original_order
@@ -76,7 +80,8 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_type: "renewal",
       sold_date: Time.zone.today - 365.days,
       tcv: 55_000,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     second_renewal = Order.create!(
@@ -85,7 +90,8 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_type: "renewal",
       sold_date: Time.zone.today,
       tcv: 60_000,
-      original_order: first_renewal
+      original_order: first_renewal,
+      created_by: users(:admin)
     )
 
     assert_includes @original_order.renewal_orders, first_renewal
@@ -99,7 +105,8 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_type: "renewal",
       sold_date: Time.zone.today,
       tcv: 55_000,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     assert_includes Order.renewals, renewal
@@ -111,14 +118,14 @@ class OrderRenewalTest < ActiveSupport::TestCase
     @original_order.services.create!(
       service_type: "internet",
       service_name: "Original Internet Service",
-      term_months: 12,
+      term_months_as_sold: 12,
       status: "active",
       units: 1,
       unit_price: 1000,
       nrcs: 500,
       annual_escalator: 3,
-      billing_start_date: Time.zone.today - 12.months,
-      rev_rec_start_date: Time.zone.today - 12.months
+      billing_start_date_as_sold: Time.zone.today - 12.months,
+      rev_rec_start_date_as_sold: Time.zone.today - 12.months
     )
 
     renewal = Order.new(
@@ -126,21 +133,22 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_number: "REN-PRICE",
       order_type: "renewal",
       sold_date: Time.zone.today,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     # Renewal with price increase
     renewal.services.build(
       service_type: "internet",
       service_name: "Renewed Internet Service",
-      term_months: 12,
+      term_months_as_sold: 12,
       status: "pending_installation",
       units: 1,
       unit_price: 1100,  # 10% increase
       nrcs: 0,  # No NRCs on renewal
       annual_escalator: 3,
-      billing_start_date: Time.zone.today,
-      rev_rec_start_date: Time.zone.today
+      billing_start_date_as_sold: Time.zone.today,
+      rev_rec_start_date_as_sold: Time.zone.today
     )
 
     assert_predicate renewal, :valid?
@@ -153,21 +161,22 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_number: "REN-TERM",
       order_type: "renewal",
       sold_date: Time.zone.today,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     # Original might be 12 months, renewal is 24 months
     renewal.services.build(
       service_type: "internet",
       service_name: "Extended Term Renewal",
-      term_months: 24,
+      term_months_as_sold: 24,
       status: "pending_installation",
       units: 1,
       unit_price: 950,  # Discount for longer term
       nrcs: 0,
       annual_escalator: 2,
-      billing_start_date: Time.zone.today,
-      rev_rec_start_date: Time.zone.today
+      billing_start_date_as_sold: Time.zone.today,
+      rev_rec_start_date_as_sold: Time.zone.today
     )
 
     assert_predicate renewal, :valid?
@@ -180,7 +189,8 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_type: "renewal",
       sold_date: Time.zone.today,
       tcv: 55_000,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     assert_raises(ActiveRecord::RecordNotDestroyed) do
@@ -196,7 +206,8 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_number: "REN-CUSTOMER",
       order_type: "renewal",
       sold_date: Time.zone.today,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     assert_equal @original_order.customer, renewal.customer
@@ -210,7 +221,8 @@ class OrderRenewalTest < ActiveSupport::TestCase
         customer: @customer,
         order_number: "TEST-#{type.upcase}",
         sold_date: Time.zone.today,
-        order_type: type
+        order_type: type,
+        created_by: users(:admin)
       )
 
       assert_predicate order, :valid?, "Order with type #{type} should be valid without original_order"
@@ -222,27 +234,27 @@ class OrderRenewalTest < ActiveSupport::TestCase
     @original_order.services.create!(
       service_type: "internet",
       service_name: "Internet Service",
-      term_months: 12,
+      term_months_as_sold: 12,
       status: "active",
       units: 1,
       unit_price: 1000,
       nrcs: 500,
       annual_escalator: 3,
-      billing_start_date: Time.zone.today - 12.months,
-      rev_rec_start_date: Time.zone.today - 12.months
+      billing_start_date_as_sold: Time.zone.today - 12.months,
+      rev_rec_start_date_as_sold: Time.zone.today - 12.months
     )
 
     @original_order.services.create!(
       service_type: "voice",
       service_name: "Voice Service",
-      term_months: 12,
+      term_months_as_sold: 12,
       status: "active",
       units: 5,
       unit_price: 50,
       nrcs: 0,
       annual_escalator: 0,
-      billing_start_date: Time.zone.today - 12.months,
-      rev_rec_start_date: Time.zone.today - 12.months
+      billing_start_date_as_sold: Time.zone.today - 12.months,
+      rev_rec_start_date_as_sold: Time.zone.today - 12.months
     )
 
     # Renewal only includes internet service (voice not renewed)
@@ -251,20 +263,21 @@ class OrderRenewalTest < ActiveSupport::TestCase
       order_number: "REN-PARTIAL",
       order_type: "renewal",
       sold_date: Time.zone.today,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     renewal.services.build(
       service_type: "internet",
       service_name: "Renewed Internet Service Only",
-      term_months: 12,
+      term_months_as_sold: 12,
       status: "pending_installation",
       units: 1,
       unit_price: 1100,
       nrcs: 0,
       annual_escalator: 3,
-      billing_start_date: Time.zone.today,
-      rev_rec_start_date: Time.zone.today
+      billing_start_date_as_sold: Time.zone.today,
+      rev_rec_start_date_as_sold: Time.zone.today
     )
 
     assert_predicate renewal, :valid?

@@ -370,7 +370,7 @@ DEPENDENCIES
   importmap-rails
   jbuilder
   minitest-reporters
-  pg (~> 1.1)
+  pg (~> 1.5)
   propshaft
   puma (>= 5.0)
   rails (~> 8.0.2)

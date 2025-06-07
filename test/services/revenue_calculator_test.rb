@@ -10,13 +10,18 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "calculate_tcv without escalation" do
     @service.update!(
       mrr: 1000,
-      term_months: 12,
+      term_months_as_sold: 12,
+      term_months_as_delivered: 12,
       annual_escalator: 0,
       nrcs: 500,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil, # Let model calculate
-      rev_rec_start_date: Date.new(2024, 1, 1),
-      rev_rec_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil, # Let model calculate
+      rev_rec_start_date_as_sold: Date.new(2024, 1, 1),
+      rev_rec_start_date_as_delivered: Date.new(2024, 1, 1),
+      rev_rec_end_date_as_sold: nil, # Let model calculate
+      rev_rec_end_date_as_delivered: nil # Let model calculate
     )
 
     # TCV = (1000 * 12) + 500 = 12,500
@@ -26,11 +31,14 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "calculate_tcv with annual escalation" do
     @service.update!(
       mrr: 1000,
-      term_months: 12,
+      term_months_as_sold: 12,
+      term_months_as_delivered: 12,
       annual_escalator: 5,
       nrcs: 0,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil # Let model calculate
     )
 
     # With 5% annual escalation - no escalation in first year
@@ -43,11 +51,14 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "calculate_tcv with escalation and NRCs" do
     @service.update!(
       mrr: 1000,
-      term_months: 24,
+      term_months_as_sold: 24,
+      term_months_as_delivered: 24,
       annual_escalator: 3,
       nrcs: 1500,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil # Let model calculate
     )
 
     tcv = @calculator.calculate_tcv
@@ -73,11 +84,14 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "calculate_gaap_mrr" do
     @service.update!(
       mrr: 1000,
-      term_months: 12,
+      term_months_as_sold: 12,
+      term_months_as_delivered: 12,
       annual_escalator: 0,
       nrcs: 1200,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil # Let model calculate
     )
 
     # GAAP MRR = (TCV - NRCs) / months
@@ -88,11 +102,14 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "calculate_gaap_mrr with escalation" do
     @service.update!(
       mrr: 1000,
-      term_months: 36,
+      term_months_as_sold: 36,
+      term_months_as_delivered: 36,
       annual_escalator: 3,
       nrcs: 0,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil # Let model calculate
     )
 
     gaap_mrr = @calculator.calculate_gaap_mrr
@@ -106,12 +123,17 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "calculate_monthly_breakdown returns correct length" do
     @service.update!(
       mrr: 1000,
-      term_months: 24,
+      term_months_as_sold: 24,
+      term_months_as_delivered: 24,
       annual_escalator: 3,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil, # Let model calculate
-      rev_rec_start_date: Date.new(2024, 1, 1),
-      rev_rec_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil, # Let model calculate
+      rev_rec_start_date_as_sold: Date.new(2024, 1, 1),
+      rev_rec_start_date_as_delivered: Date.new(2024, 1, 1),
+      rev_rec_end_date_as_sold: nil, # Let model calculate
+      rev_rec_end_date_as_delivered: nil # Let model calculate
     )
 
     breakdown = @calculator.calculate_monthly_breakdown
@@ -122,12 +144,17 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "calculate_monthly_breakdown applies annual escalation correctly" do
     @service.update!(
       mrr: 1000,
-      term_months: 24,
+      term_months_as_sold: 24,
+      term_months_as_delivered: 24,
       annual_escalator: 3,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil, # Let model calculate
-      rev_rec_start_date: Date.new(2024, 1, 1),
-      rev_rec_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil, # Let model calculate
+      rev_rec_start_date_as_sold: Date.new(2024, 1, 1),
+      rev_rec_start_date_as_delivered: Date.new(2024, 1, 1),
+      rev_rec_end_date_as_sold: nil, # Let model calculate
+      rev_rec_end_date_as_delivered: nil # Let model calculate
     )
 
     breakdown = @calculator.calculate_monthly_breakdown
@@ -140,11 +167,14 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "calculate_net_new_value for new service" do
     @service.update!(
       mrr: 1000,
-      term_months: 12,
+      term_months_as_sold: 12,
+      term_months_as_delivered: 12,
       nrcs: 0,
       annual_escalator: 0,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil # Let model calculate
     )
 
     net_new = @calculator.calculate_net_new_value(nil)
@@ -161,11 +191,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       mrr: 800,
       units: 1,
       unit_price: 800,
-      term_months: 12,
+      term_months_as_sold: 12,
       nrcs: 0,
       annual_escalator: 0,
-      billing_start_date: Date.new(2024, 1, 1),
-      rev_rec_start_date: Date.new(2024, 1, 1),
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      rev_rec_start_date_as_sold: Date.new(2024, 1, 1),
       status: "active"
     )
 
@@ -177,11 +207,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       mrr: 1200,
       units: 1,
       unit_price: 1200,
-      term_months: 12,
+      term_months_as_sold: 12,
       nrcs: 0,
       annual_escalator: 0,
-      billing_start_date: Date.new(2024, 1, 1),
-      rev_rec_start_date: Date.new(2024, 1, 1),
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      rev_rec_start_date_as_sold: Date.new(2024, 1, 1),
       status: "active"
     )
 
@@ -201,11 +231,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       mrr: 1200,
       units: 1,
       unit_price: 1200,
-      term_months: 12,
+      term_months_as_sold: 12,
       nrcs: 0,
       annual_escalator: 0,
-      billing_start_date: Date.new(2024, 1, 1),
-      rev_rec_start_date: Date.new(2024, 1, 1),
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      rev_rec_start_date_as_sold: Date.new(2024, 1, 1),
       status: "active"
     )
 
@@ -217,11 +247,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       mrr: 800,
       units: 1,
       unit_price: 800,
-      term_months: 12,
+      term_months_as_sold: 12,
       nrcs: 0,
       annual_escalator: 0,
-      billing_start_date: Date.new(2024, 1, 1),
-      rev_rec_start_date: Date.new(2024, 1, 1),
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      rev_rec_start_date_as_sold: Date.new(2024, 1, 1),
       status: "active"
     )
 
@@ -236,9 +266,12 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
     # Service starting on the 15th of a 30-day month
     @service.update!(
       mrr: 3000,
-      billing_start_date: Date.new(2024, 4, 15), # April has 30 days
-      billing_end_date: Date.new(2024, 5, 14),
-      term_months: 1
+      billing_start_date_as_sold: Date.new(2024, 4, 15), # April has 30 days
+      billing_start_date_as_delivered: Date.new(2024, 4, 15),
+      billing_end_date_as_sold: Date.new(2024, 5, 14),
+      billing_end_date_as_delivered: Date.new(2024, 5, 14),
+      term_months_as_sold: 1,
+      term_months_as_delivered: 1
     )
 
     # Days remaining: 16 (15th through 30th)
@@ -250,9 +283,12 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
     # Test leap year proration
     @service.update!(
       mrr: 2900,
-      billing_start_date: Date.new(2024, 2, 15), # 2024 is a leap year
-      billing_end_date: Date.new(2024, 3, 14),
-      term_months: 1
+      billing_start_date_as_sold: Date.new(2024, 2, 15), # 2024 is a leap year
+      billing_start_date_as_delivered: Date.new(2024, 2, 15),
+      billing_end_date_as_sold: Date.new(2024, 3, 14),
+      billing_end_date_as_delivered: Date.new(2024, 3, 14),
+      term_months_as_sold: 1,
+      term_months_as_delivered: 1
     )
 
     # Days remaining: 15 (15th through 29th in leap year)
@@ -276,7 +312,7 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   end
 
   test "validates term months presence" do
-    @service.update_columns(term_months: nil) # Use update_columns to skip validations
+    @service.update_columns(term_months_as_sold: nil, term_months_as_delivered: nil) # Use update_columns to skip validations
     @calculator = RevenueCalculator.new(@service) # Reinitialize calculator
     @calculator.calculate_tcv
 
@@ -285,8 +321,10 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
 
   test "validates date logic" do
     @service.update_columns(
-      billing_start_date: Date.new(2024, 2, 1),
-      billing_end_date: Date.new(2024, 1, 1)
+      billing_start_date_as_sold: Date.new(2024, 2, 1),
+      billing_start_date_as_delivered: Date.new(2024, 2, 1),
+      billing_end_date_as_sold: Date.new(2024, 1, 1),
+      billing_end_date_as_delivered: Date.new(2024, 1, 1)
     )
     @calculator = RevenueCalculator.new(@service) # Reinitialize calculator
     @calculator.calculate_tcv
@@ -303,7 +341,7 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   end
 
   test "handles zero term months gracefully" do
-    @service.update_columns(term_months: 0) # Use update_columns to skip validations
+    @service.update_columns(term_months_as_sold: 0, term_months_as_delivered: 0) # Use update_columns to skip validations
     @calculator = RevenueCalculator.new(@service) # Reinitialize calculator
 
     assert_equal 0, @calculator.calculate_gaap_mrr
@@ -312,11 +350,14 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "edge case: very high escalation rate" do
     @service.update!(
       mrr: 100,
-      term_months: 36,
+      term_months_as_sold: 36,
+      term_months_as_delivered: 36,
       annual_escalator: 50, # 50% annual escalation
       nrcs: 0,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil # Let model calculate
     )
 
     tcv = @calculator.calculate_tcv
@@ -330,11 +371,14 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "edge case: single month term" do
     @service.update!(
       mrr: 5000,
-      term_months: 1,
+      term_months_as_sold: 1,
+      term_months_as_delivered: 1,
       annual_escalator: 12,
       nrcs: 100,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil # Let model calculate
     )
 
     assert_equal 5_100, @calculator.calculate_tcv
@@ -344,7 +388,8 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "handles nil values gracefully" do
     @service.update_columns(
       mrr: 1000,
-      term_months: 12,
+      term_months_as_sold: 12,
+      term_months_as_delivered: 12,
       annual_escalator: nil,
       nrcs: nil
     )
@@ -357,13 +402,18 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "calculate_all returns complete hash structure" do
     @service.update!(
       mrr: 1000,
-      term_months: 12,
+      term_months_as_sold: 12,
+      term_months_as_delivered: 12,
       annual_escalator: 0,
       nrcs: 500,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil, # Let model calculate
-      rev_rec_start_date: Date.new(2024, 1, 1),
-      rev_rec_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil, # Let model calculate
+      rev_rec_start_date_as_sold: Date.new(2024, 1, 1),
+      rev_rec_start_date_as_delivered: Date.new(2024, 1, 1),
+      rev_rec_end_date_as_sold: nil, # Let model calculate
+      rev_rec_end_date_as_delivered: nil # Let model calculate
     )
 
     result = @calculator.calculate_all
@@ -376,13 +426,18 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "calculate_all returns correct values" do
     @service.update!(
       mrr: 1000,
-      term_months: 12,
+      term_months_as_sold: 12,
+      term_months_as_delivered: 12,
       annual_escalator: 0,
       nrcs: 500,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil, # Let model calculate
-      rev_rec_start_date: Date.new(2024, 1, 1),
-      rev_rec_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil, # Let model calculate
+      rev_rec_start_date_as_sold: Date.new(2024, 1, 1),
+      rev_rec_start_date_as_delivered: Date.new(2024, 1, 1),
+      rev_rec_end_date_as_sold: nil, # Let model calculate
+      rev_rec_end_date_as_delivered: nil # Let model calculate
     )
 
     result = @calculator.calculate_all
@@ -395,13 +450,18 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "validates user example TCV and GAAP MRR calculations" do
     @service.update!(
       mrr: 1000,
-      term_months: 36,
+      term_months_as_sold: 36,
+      term_months_as_delivered: 36,
       annual_escalator: 3,
       nrcs: 1000,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil, # Let model calculate
-      rev_rec_start_date: Date.new(2024, 1, 1),
-      rev_rec_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil, # Let model calculate
+      rev_rec_start_date_as_sold: Date.new(2024, 1, 1),
+      rev_rec_start_date_as_delivered: Date.new(2024, 1, 1),
+      rev_rec_end_date_as_sold: nil, # Let model calculate
+      rev_rec_end_date_as_delivered: nil # Let model calculate
     )
 
     # TCV should be $38,090.80
@@ -414,13 +474,18 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
   test "validates user example monthly escalations" do
     @service.update!(
       mrr: 1000,
-      term_months: 36,
+      term_months_as_sold: 36,
+      term_months_as_delivered: 36,
       annual_escalator: 3,
       nrcs: 1000,
-      billing_start_date: Date.new(2024, 1, 1),
-      billing_end_date: nil, # Let model calculate
-      rev_rec_start_date: Date.new(2024, 1, 1),
-      rev_rec_end_date: nil # Let model calculate
+      billing_start_date_as_sold: Date.new(2024, 1, 1),
+      billing_start_date_as_delivered: Date.new(2024, 1, 1),
+      billing_end_date_as_sold: nil, # Let model calculate
+      billing_end_date_as_delivered: nil, # Let model calculate
+      rev_rec_start_date_as_sold: Date.new(2024, 1, 1),
+      rev_rec_start_date_as_delivered: Date.new(2024, 1, 1),
+      rev_rec_end_date_as_sold: nil, # Let model calculate
+      rev_rec_end_date_as_delivered: nil # Let model calculate
     )
 
     breakdown = @calculator.calculate_monthly_breakdown
@@ -436,11 +501,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Monthly Invoice Service",
       service_type: "internet",
-      term_months: 3,
-      billing_start_date: Date.new(2025, 1, 1),
-      billing_end_date: Date.new(2025, 3, 31),
-      rev_rec_start_date: Date.new(2025, 1, 1),
-      rev_rec_end_date: Date.new(2025, 3, 31),
+      term_months_as_sold: 3,
+      billing_start_date_as_sold: Date.new(2025, 1, 1),
+      billing_end_date_as_sold: Date.new(2025, 3, 31),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 1),
+      rev_rec_end_date_as_sold: Date.new(2025, 3, 31),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -460,11 +525,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Monthly Invoice Service",
       service_type: "internet",
-      term_months: 3,
-      billing_start_date: Date.new(2025, 1, 1),
-      billing_end_date: Date.new(2025, 3, 31),
-      rev_rec_start_date: Date.new(2025, 1, 1),
-      rev_rec_end_date: Date.new(2025, 3, 31),
+      term_months_as_sold: 3,
+      billing_start_date_as_sold: Date.new(2025, 1, 1),
+      billing_end_date_as_sold: Date.new(2025, 3, 31),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 1),
+      rev_rec_end_date_as_sold: Date.new(2025, 3, 31),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -487,11 +552,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Monthly Invoice Service",
       service_type: "internet",
-      term_months: 3,
-      billing_start_date: Date.new(2025, 1, 1),
-      billing_end_date: Date.new(2025, 3, 31),
-      rev_rec_start_date: Date.new(2025, 1, 1),
-      rev_rec_end_date: Date.new(2025, 3, 31),
+      term_months_as_sold: 3,
+      billing_start_date_as_sold: Date.new(2025, 1, 1),
+      billing_end_date_as_sold: Date.new(2025, 3, 31),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 1),
+      rev_rec_end_date_as_sold: Date.new(2025, 3, 31),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -514,11 +579,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Monthly Invoice Service",
       service_type: "internet",
-      term_months: 3,
-      billing_start_date: Date.new(2025, 1, 1),
-      billing_end_date: Date.new(2025, 3, 31),
-      rev_rec_start_date: Date.new(2025, 1, 1),
-      rev_rec_end_date: Date.new(2025, 3, 31),
+      term_months_as_sold: 3,
+      billing_start_date_as_sold: Date.new(2025, 1, 1),
+      billing_end_date_as_sold: Date.new(2025, 3, 31),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 1),
+      rev_rec_end_date_as_sold: Date.new(2025, 3, 31),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -541,11 +606,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Partial Month Service",
       service_type: "internet",
-      term_months: 3,
-      billing_start_date: Date.new(2025, 1, 14),
-      billing_end_date: Date.new(2025, 4, 13),
-      rev_rec_start_date: Date.new(2025, 1, 14),
-      rev_rec_end_date: Date.new(2025, 4, 13),
+      term_months_as_sold: 3,
+      billing_start_date_as_sold: Date.new(2025, 1, 14),
+      billing_end_date_as_sold: Date.new(2025, 4, 13),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 14),
+      rev_rec_end_date_as_sold: Date.new(2025, 4, 13),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -565,11 +630,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Partial Month Service",
       service_type: "internet",
-      term_months: 3,
-      billing_start_date: Date.new(2025, 1, 14),
-      billing_end_date: Date.new(2025, 4, 13),
-      rev_rec_start_date: Date.new(2025, 1, 14),
-      rev_rec_end_date: Date.new(2025, 4, 13),
+      term_months_as_sold: 3,
+      billing_start_date_as_sold: Date.new(2025, 1, 14),
+      billing_end_date_as_sold: Date.new(2025, 4, 13),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 14),
+      rev_rec_end_date_as_sold: Date.new(2025, 4, 13),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -592,11 +657,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Partial Month Service",
       service_type: "internet",
-      term_months: 3,
-      billing_start_date: Date.new(2025, 1, 14),
-      billing_end_date: Date.new(2025, 4, 13),
-      rev_rec_start_date: Date.new(2025, 1, 14),
-      rev_rec_end_date: Date.new(2025, 4, 13),
+      term_months_as_sold: 3,
+      billing_start_date_as_sold: Date.new(2025, 1, 14),
+      billing_end_date_as_sold: Date.new(2025, 4, 13),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 14),
+      rev_rec_end_date_as_sold: Date.new(2025, 4, 13),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -618,11 +683,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Partial Month Service",
       service_type: "internet",
-      term_months: 3,
-      billing_start_date: Date.new(2025, 1, 14),
-      billing_end_date: Date.new(2025, 4, 13),
-      rev_rec_start_date: Date.new(2025, 1, 14),
-      rev_rec_end_date: Date.new(2025, 4, 13),
+      term_months_as_sold: 3,
+      billing_start_date_as_sold: Date.new(2025, 1, 14),
+      billing_end_date_as_sold: Date.new(2025, 4, 13),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 14),
+      rev_rec_end_date_as_sold: Date.new(2025, 4, 13),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -645,11 +710,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Escalating Service",
       service_type: "internet",
-      term_months: 24,
-      billing_start_date: Date.new(2025, 1, 1),
-      billing_end_date: Date.new(2026, 12, 31),
-      rev_rec_start_date: Date.new(2025, 1, 1),
-      rev_rec_end_date: Date.new(2026, 12, 31),
+      term_months_as_sold: 24,
+      billing_start_date_as_sold: Date.new(2025, 1, 1),
+      billing_end_date_as_sold: Date.new(2026, 12, 31),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 1),
+      rev_rec_end_date_as_sold: Date.new(2026, 12, 31),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -679,11 +744,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Total Invoice Service",
       service_type: "internet",
-      term_months: 12,
-      billing_start_date: Date.new(2025, 1, 1),
-      billing_end_date: Date.new(2025, 12, 31),
-      rev_rec_start_date: Date.new(2025, 1, 1),
-      rev_rec_end_date: Date.new(2025, 12, 31),
+      term_months_as_sold: 12,
+      billing_start_date_as_sold: Date.new(2025, 1, 1),
+      billing_end_date_as_sold: Date.new(2025, 12, 31),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 1),
+      rev_rec_end_date_as_sold: Date.new(2025, 12, 31),
       units: 1,
       unit_price: 1000,
       nrcs: 500, # Note: NRCs are not included in monthly invoices
@@ -705,11 +770,16 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Single Day Service",
       service_type: "internet",
-      term_months: 1,
-      billing_start_date: Date.new(2025, 1, 15),
-      billing_end_date: Date.new(2025, 1, 15),
-      rev_rec_start_date: Date.new(2025, 1, 15),
-      rev_rec_end_date: Date.new(2025, 1, 15),
+      term_months_as_sold: 1,
+      term_months_as_delivered: 1,
+      billing_start_date_as_sold: Date.new(2025, 1, 15),
+      billing_start_date_as_delivered: Date.new(2025, 1, 15),
+      billing_end_date_as_sold: Date.new(2025, 1, 15),
+      billing_end_date_as_delivered: Date.new(2025, 1, 15),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 15),
+      rev_rec_start_date_as_delivered: Date.new(2025, 1, 15),
+      rev_rec_end_date_as_sold: Date.new(2025, 1, 15),
+      rev_rec_end_date_as_delivered: Date.new(2025, 1, 15),
       units: 1,
       unit_price: 3100, # $100/day * 31 days
       nrcs: 0,
@@ -734,11 +804,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Leap Year Service",
       service_type: "internet",
-      term_months: 1,
-      billing_start_date: Date.new(2024, 2, 1),
-      billing_end_date: Date.new(2024, 2, 29),
-      rev_rec_start_date: Date.new(2024, 2, 1),
-      rev_rec_end_date: Date.new(2024, 2, 29),
+      term_months_as_sold: 1,
+      billing_start_date_as_sold: Date.new(2024, 2, 1),
+      billing_end_date_as_sold: Date.new(2024, 2, 29),
+      rev_rec_start_date_as_sold: Date.new(2024, 2, 1),
+      rev_rec_end_date_as_sold: Date.new(2024, 2, 29),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -760,7 +830,7 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Invalid Service",
       service_type: "internet",
-      term_months: 0, # Invalid
+      term_months_as_sold: 0, # Invalid
       units: 1,
       unit_price: 1000,
       status: "active"
@@ -778,11 +848,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Billing Period Service",
       service_type: "internet",
-      term_months: 3,
-      billing_start_date: Date.new(2025, 1, 1),
-      billing_end_date: Date.new(2025, 3, 31),
-      rev_rec_start_date: Date.new(2025, 1, 1),
-      rev_rec_end_date: Date.new(2025, 3, 31),
+      term_months_as_sold: 3,
+      billing_start_date_as_sold: Date.new(2025, 1, 1),
+      billing_end_date_as_sold: Date.new(2025, 3, 31),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 1),
+      rev_rec_end_date_as_sold: Date.new(2025, 3, 31),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -802,11 +872,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Partial Start Service",
       service_type: "internet",
-      term_months: 2,
-      billing_start_date: Date.new(2025, 1, 15),
-      billing_end_date: Date.new(2025, 3, 14),
-      rev_rec_start_date: Date.new(2025, 1, 15),
-      rev_rec_end_date: Date.new(2025, 3, 14),
+      term_months_as_sold: 2,
+      billing_start_date_as_sold: Date.new(2025, 1, 15),
+      billing_end_date_as_sold: Date.new(2025, 3, 14),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 15),
+      rev_rec_end_date_as_sold: Date.new(2025, 3, 14),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -829,11 +899,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Partial Start Service",
       service_type: "internet",
-      term_months: 2,
-      billing_start_date: Date.new(2025, 1, 15),
-      billing_end_date: Date.new(2025, 3, 14),
-      rev_rec_start_date: Date.new(2025, 1, 15),
-      rev_rec_end_date: Date.new(2025, 3, 14),
+      term_months_as_sold: 2,
+      billing_start_date_as_sold: Date.new(2025, 1, 15),
+      billing_end_date_as_sold: Date.new(2025, 3, 14),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 15),
+      rev_rec_end_date_as_sold: Date.new(2025, 3, 14),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -856,11 +926,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Partial End Service",
       service_type: "internet",
-      term_months: 2,
-      billing_start_date: Date.new(2025, 1, 1),
-      billing_end_date: Date.new(2025, 2, 28),
-      rev_rec_start_date: Date.new(2025, 1, 1),
-      rev_rec_end_date: Date.new(2025, 2, 28),
+      term_months_as_sold: 2,
+      billing_start_date_as_sold: Date.new(2025, 1, 1),
+      billing_end_date_as_sold: Date.new(2025, 2, 28),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 1),
+      rev_rec_end_date_as_sold: Date.new(2025, 2, 28),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -883,11 +953,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Partial End Service",
       service_type: "internet",
-      term_months: 2,
-      billing_start_date: Date.new(2025, 1, 1),
-      billing_end_date: Date.new(2025, 2, 28),
-      rev_rec_start_date: Date.new(2025, 1, 1),
-      rev_rec_end_date: Date.new(2025, 2, 28),
+      term_months_as_sold: 2,
+      billing_start_date_as_sold: Date.new(2025, 1, 1),
+      billing_end_date_as_sold: Date.new(2025, 2, 28),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 1),
+      rev_rec_end_date_as_sold: Date.new(2025, 2, 28),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -910,11 +980,16 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Single Day Service",
       service_type: "internet",
-      term_months: 1,
-      billing_start_date: Date.new(2025, 1, 15),
-      billing_end_date: Date.new(2025, 1, 15),
-      rev_rec_start_date: Date.new(2025, 1, 15),
-      rev_rec_end_date: Date.new(2025, 1, 15),
+      term_months_as_sold: 1,
+      term_months_as_delivered: 1,
+      billing_start_date_as_sold: Date.new(2025, 1, 15),
+      billing_start_date_as_delivered: Date.new(2025, 1, 15),
+      billing_end_date_as_sold: Date.new(2025, 1, 15),
+      billing_end_date_as_delivered: Date.new(2025, 1, 15),
+      rev_rec_start_date_as_sold: Date.new(2025, 1, 15),
+      rev_rec_start_date_as_delivered: Date.new(2025, 1, 15),
+      rev_rec_end_date_as_sold: Date.new(2025, 1, 15),
+      rev_rec_end_date_as_delivered: Date.new(2025, 1, 15),
       units: 1,
       unit_price: 3100,
       nrcs: 0,
@@ -939,11 +1014,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Leap Year Service",
       service_type: "internet",
-      term_months: 1,
-      billing_start_date: Date.new(2024, 2, 1),
-      billing_end_date: Date.new(2024, 2, 29),
-      rev_rec_start_date: Date.new(2024, 2, 1),
-      rev_rec_end_date: Date.new(2024, 2, 29),
+      term_months_as_sold: 1,
+      billing_start_date_as_sold: Date.new(2024, 2, 1),
+      billing_end_date_as_sold: Date.new(2024, 2, 29),
+      rev_rec_start_date_as_sold: Date.new(2024, 2, 1),
+      rev_rec_end_date_as_sold: Date.new(2024, 2, 29),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -966,7 +1041,7 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "No Dates Service",
       service_type: "internet",
-      term_months: 12,
+      term_months_as_sold: 12,
       units: 1,
       unit_price: 1000,
       status: "active"
@@ -984,11 +1059,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Multi-Year Service",
       service_type: "internet",
-      term_months: 14,
-      billing_start_date: Date.new(2024, 12, 1),
-      billing_end_date: Date.new(2026, 1, 31),
-      rev_rec_start_date: Date.new(2024, 12, 1),
-      rev_rec_end_date: Date.new(2026, 1, 31),
+      term_months_as_sold: 14,
+      billing_start_date_as_sold: Date.new(2024, 12, 1),
+      billing_end_date_as_sold: Date.new(2026, 1, 31),
+      rev_rec_start_date_as_sold: Date.new(2024, 12, 1),
+      rev_rec_end_date_as_sold: Date.new(2026, 1, 31),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -1008,11 +1083,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Multi-Year Service",
       service_type: "internet",
-      term_months: 14,
-      billing_start_date: Date.new(2024, 12, 1),
-      billing_end_date: Date.new(2026, 1, 31),
-      rev_rec_start_date: Date.new(2024, 12, 1),
-      rev_rec_end_date: Date.new(2026, 1, 31),
+      term_months_as_sold: 14,
+      billing_start_date_as_sold: Date.new(2024, 12, 1),
+      billing_end_date_as_sold: Date.new(2026, 1, 31),
+      rev_rec_start_date_as_sold: Date.new(2024, 12, 1),
+      rev_rec_end_date_as_sold: Date.new(2026, 1, 31),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -1034,11 +1109,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Multi-Year Service",
       service_type: "internet",
-      term_months: 14,
-      billing_start_date: Date.new(2024, 12, 1),
-      billing_end_date: Date.new(2026, 1, 31),
-      rev_rec_start_date: Date.new(2024, 12, 1),
-      rev_rec_end_date: Date.new(2026, 1, 31),
+      term_months_as_sold: 14,
+      billing_start_date_as_sold: Date.new(2024, 12, 1),
+      billing_end_date_as_sold: Date.new(2026, 1, 31),
+      rev_rec_start_date_as_sold: Date.new(2024, 12, 1),
+      rev_rec_end_date_as_sold: Date.new(2026, 1, 31),
       units: 1,
       unit_price: 1000,
       nrcs: 0,
@@ -1060,11 +1135,11 @@ class RevenueCalculatorTest < ActiveSupport::TestCase
       order: @order,
       service_name: "Multi-Year Service",
       service_type: "internet",
-      term_months: 14,
-      billing_start_date: Date.new(2024, 12, 1),
-      billing_end_date: Date.new(2026, 1, 31),
-      rev_rec_start_date: Date.new(2024, 12, 1),
-      rev_rec_end_date: Date.new(2026, 1, 31),
+      term_months_as_sold: 14,
+      billing_start_date_as_sold: Date.new(2024, 12, 1),
+      billing_end_date_as_sold: Date.new(2026, 1, 31),
+      rev_rec_start_date_as_sold: Date.new(2024, 12, 1),
+      rev_rec_end_date_as_sold: Date.new(2026, 1, 31),
       units: 1,
       unit_price: 1000,
       nrcs: 0,

@@ -62,16 +62,17 @@ class CustomerTest < ActiveSupport::TestCase
     order = @customer.orders.create!(
       order_number: "ORD001",
       sold_date: Date.current,
-      order_type: "new_order"
+      order_type: "new_order",
+      created_by: users(:admin)
     )
     order.services.create!(
       service_name: "Test Service",
       service_type: "internet",
-      term_months: 12,
-      billing_start_date: Date.current,
-      billing_end_date: Date.current + 12.months - 1.day,
-      rev_rec_start_date: Date.current,
-      rev_rec_end_date: Date.current + 12.months - 1.day,
+      term_months_as_sold: 12,
+      billing_start_date_as_sold: Date.current,
+      billing_end_date_as_sold: Date.current + 12.months - 1.day,
+      rev_rec_start_date_as_sold: Date.current,
+      rev_rec_end_date_as_sold: Date.current + 12.months - 1.day,
       units: 1,
       unit_price: 100,
       nrcs: 0,
@@ -87,16 +88,17 @@ class CustomerTest < ActiveSupport::TestCase
     order = @customer.orders.create!(
       order_number: "ORD001",
       sold_date: Date.current,
-      order_type: "new_order"
+      order_type: "new_order",
+      created_by: users(:admin)
     )
     order.services.create!(
       service_name: "Test Service",
       service_type: "internet",
-      term_months: 12,
-      billing_start_date: Date.current,
-      billing_end_date: Date.current + 12.months - 1.day,
-      rev_rec_start_date: Date.current,
-      rev_rec_end_date: Date.current + 12.months - 1.day,
+      term_months_as_sold: 12,
+      billing_start_date_as_sold: Date.current,
+      billing_end_date_as_sold: Date.current + 12.months - 1.day,
+      rev_rec_start_date_as_sold: Date.current,
+      rev_rec_end_date_as_sold: Date.current + 12.months - 1.day,
       units: 1,
       unit_price: 100,
       nrcs: 0,
@@ -159,17 +161,18 @@ class CustomerTest < ActiveSupport::TestCase
     order = @customer.orders.create!(
       order_number: "ORD002",
       sold_date: Date.current,
-      order_type: "new_order"
+      order_type: "new_order",
+      created_by: users(:admin)
     )
 
     active_service = order.services.create!(
       service_name: "Active Service",
       service_type: "internet",
-      term_months: 12,
-      billing_start_date: Date.current,
-      billing_end_date: Date.current + 12.months - 1.day,
-      rev_rec_start_date: Date.current,
-      rev_rec_end_date: Date.current + 12.months - 1.day,
+      term_months_as_sold: 12,
+      billing_start_date_as_sold: Date.current,
+      billing_end_date_as_sold: Date.current + 12.months - 1.day,
+      rev_rec_start_date_as_sold: Date.current,
+      rev_rec_end_date_as_sold: Date.current + 12.months - 1.day,
       units: 1,
       unit_price: 100,
       nrcs: 0,
@@ -180,11 +183,11 @@ class CustomerTest < ActiveSupport::TestCase
     inactive_service = order.services.create!(
       service_name: "Inactive Service",
       service_type: "internet",
-      term_months: 12,
-      billing_start_date: Date.current,
-      billing_end_date: Date.current + 12.months - 1.day,
-      rev_rec_start_date: Date.current,
-      rev_rec_end_date: Date.current + 12.months - 1.day,
+      term_months_as_sold: 12,
+      billing_start_date_as_sold: Date.current,
+      billing_end_date_as_sold: Date.current + 12.months - 1.day,
+      rev_rec_start_date_as_sold: Date.current,
+      rev_rec_end_date_as_sold: Date.current + 12.months - 1.day,
       units: 1,
       unit_price: 50,
       nrcs: 0,
@@ -203,17 +206,18 @@ class CustomerTest < ActiveSupport::TestCase
     order = @customer.orders.create!(
       order_number: "ORD003",
       sold_date: Date.current,
-      order_type: "new_order"
+      order_type: "new_order",
+      created_by: users(:admin)
     )
 
     order.services.create!(
       service_name: "Service 1",
       service_type: "internet",
-      term_months: 12,
-      billing_start_date: Date.current,
-      billing_end_date: Date.current + 12.months - 1.day,
-      rev_rec_start_date: Date.current,
-      rev_rec_end_date: Date.current + 12.months - 1.day,
+      term_months_as_sold: 12,
+      billing_start_date_as_sold: Date.current,
+      billing_end_date_as_sold: Date.current + 12.months - 1.day,
+      rev_rec_start_date_as_sold: Date.current,
+      rev_rec_end_date_as_sold: Date.current + 12.months - 1.day,
       units: 1,
       unit_price: 100,
       nrcs: 0,
@@ -224,11 +228,11 @@ class CustomerTest < ActiveSupport::TestCase
     order.services.create!(
       service_name: "Service 2",
       service_type: "voice",
-      term_months: 12,
-      billing_start_date: Date.current,
-      billing_end_date: Date.current + 12.months - 1.day,
-      rev_rec_start_date: Date.current,
-      rev_rec_end_date: Date.current + 12.months - 1.day,
+      term_months_as_sold: 12,
+      billing_start_date_as_sold: Date.current,
+      billing_end_date_as_sold: Date.current + 12.months - 1.day,
+      rev_rec_start_date_as_sold: Date.current,
+      rev_rec_end_date_as_sold: Date.current + 12.months - 1.day,
       units: 1,
       unit_price: 50,
       nrcs: 0,
@@ -248,16 +252,17 @@ class CustomerTest < ActiveSupport::TestCase
     order = @customer.orders.create!(
       order_number: "ORD004",
       sold_date: Date.current,
-      order_type: "new_order"
+      order_type: "new_order",
+      created_by: users(:admin)
     )
     order.services.create!(
       service_name: "Active Service",
       service_type: "internet",
-      term_months: 12,
-      billing_start_date: Date.current,
-      billing_end_date: Date.current + 12.months - 1.day,
-      rev_rec_start_date: Date.current,
-      rev_rec_end_date: Date.current + 12.months - 1.day,
+      term_months_as_sold: 12,
+      billing_start_date_as_sold: Date.current,
+      billing_end_date_as_sold: Date.current + 12.months - 1.day,
+      rev_rec_start_date_as_sold: Date.current,
+      rev_rec_end_date_as_sold: Date.current + 12.months - 1.day,
       units: 1,
       unit_price: 100,
       nrcs: 0,
@@ -273,16 +278,17 @@ class CustomerTest < ActiveSupport::TestCase
     order = @customer.orders.create!(
       order_number: "ORD005",
       sold_date: Date.current,
-      order_type: "new_order"
+      order_type: "new_order",
+      created_by: users(:admin)
     )
     order.services.create!(
       service_name: "Canceled Service",
       service_type: "internet",
-      term_months: 12,
-      billing_start_date: Date.current,
-      billing_end_date: Date.current + 12.months - 1.day,
-      rev_rec_start_date: Date.current,
-      rev_rec_end_date: Date.current + 12.months - 1.day,
+      term_months_as_sold: 12,
+      billing_start_date_as_sold: Date.current,
+      billing_end_date_as_sold: Date.current + 12.months - 1.day,
+      rev_rec_start_date_as_sold: Date.current,
+      rev_rec_end_date_as_sold: Date.current + 12.months - 1.day,
       units: 1,
       unit_price: 100,
       nrcs: 0,
@@ -316,7 +322,8 @@ class CustomerTest < ActiveSupport::TestCase
     @customer.orders.create!(
       order_number: "ORD006",
       sold_date: Date.current,
-      order_type: "new_order"
+      order_type: "new_order",
+      created_by: users(:admin)
     )
 
     assert_raises(ActiveRecord::RecordNotDestroyed) do

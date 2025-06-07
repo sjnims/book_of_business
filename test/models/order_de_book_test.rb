@@ -12,7 +12,8 @@ class OrderDeBookTest < ActiveSupport::TestCase
       order_number: "DE-BOOK-001",
       order_type: "de_book",
       sold_date: Time.zone.today,
-      tcv: -@original_order.tcv
+      tcv: -@original_order.tcv,
+      created_by: users(:admin)
     )
 
     assert_not de_book.valid?
@@ -26,7 +27,8 @@ class OrderDeBookTest < ActiveSupport::TestCase
       order_type: "de_book",
       sold_date: Time.zone.today,
       tcv: -@original_order.tcv,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     assert_predicate de_book, :valid?, de_book.errors.full_messages.join(", ")
@@ -49,14 +51,14 @@ class OrderDeBookTest < ActiveSupport::TestCase
     @original_order.services.create!(
       service_type: "internet",
       service_name: "Pending Internet Service",
-      term_months: 24,
+      term_months_as_sold: 24,
       status: "pending_installation",
       units: 2,
       unit_price: 1000,
       nrcs: 1000,
       annual_escalator: 0,
-      billing_start_date: Time.zone.today,
-      rev_rec_start_date: Time.zone.today
+      billing_start_date_as_sold: Time.zone.today,
+      rev_rec_start_date_as_sold: Time.zone.today
     )
 
     de_book = Order.new(
@@ -64,21 +66,22 @@ class OrderDeBookTest < ActiveSupport::TestCase
       order_number: "DE-BOOK-002",
       order_type: "de_book",
       sold_date: Time.zone.today,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     # Create services with negative values
     de_book.services.build(
       service_type: "internet",
       service_name: "De-booked Internet Service",
-      term_months: 24,
+      term_months_as_sold: 24,
       status: "canceled",
       units: -1,
       unit_price: 1000,
       nrcs: -500,
       annual_escalator: 0,
-      billing_start_date: Time.zone.today,
-      rev_rec_start_date: Time.zone.today
+      billing_start_date_as_sold: Time.zone.today,
+      rev_rec_start_date_as_sold: Time.zone.today
     )
 
     assert_predicate de_book, :valid?
@@ -91,7 +94,8 @@ class OrderDeBookTest < ActiveSupport::TestCase
       order_type: "de_book",
       sold_date: Time.zone.today,
       tcv: -10_000,
-      original_order: @original_order
+      original_order: @original_order,
+      created_by: users(:admin)
     )
 
     assert_includes Order.all, de_book

@@ -31,8 +31,7 @@ class OrdersController < ApplicationController
   # Redirects to order detail page on success, re-renders form on failure
   def create
     @order = Order.new(order_params)
-    # TODO: Uncomment when created_by_id is added in Phase 2.3
-    # @order.created_by = current_user
+    @order.created_by = current_user
 
     if @order.save
       redirect_to @order, notice: "Order was successfully created."

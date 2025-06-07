@@ -39,7 +39,7 @@ class RevenueCalculator
 
     base_mrr = service.mrr || 0
     annual_escalator = (service.annual_escalator || 0) / 100.0
-    months = service.term_months || 0
+    months = service.term_months_as_delivered || 0
     nrcs = service.nrcs || 0
 
     total_revenue = 0
@@ -79,7 +79,7 @@ class RevenueCalculator
     # GAAP MRR = (TCV - NRCs) / contract term in months
     tcv = calculate_tcv
     nrcs = service.nrcs || 0
-    months = service.term_months || 0
+    months = service.term_months_as_delivered || 0
 
     return 0 if months.zero?
 
@@ -98,8 +98,8 @@ class RevenueCalculator
     current_mrr = base_mrr
     gaap_mrr = calculate_gaap_mrr
 
-    start_date = service.rev_rec_start_date || service.billing_start_date
-    end_date = service.rev_rec_end_date || service.billing_end_date
+    start_date = service.rev_rec_start_date_as_delivered || service.billing_start_date_as_delivered
+    end_date = service.rev_rec_end_date_as_delivered || service.billing_end_date_as_delivered
 
     return [] unless start_date && end_date
 
@@ -142,9 +142,9 @@ class RevenueCalculator
   #
   # Returns Float representing the prorated amount based on days remaining
   def prorate_for_partial_month
-    return 0 unless service.billing_start_date && service.billing_end_date
+    return 0 unless service.billing_start_date_as_delivered && service.billing_end_date_as_delivered
 
-    start_date = service.billing_start_date
+    start_date = service.billing_start_date_as_delivered
     days_in_month = Time.days_in_month(start_date.month, start_date.year)
     days_remaining = days_in_month - start_date.day + 1
 
@@ -174,8 +174,8 @@ class RevenueCalculator
     invoices = []
 
     # Use billing dates for invoice calculations
-    start_date = service.billing_start_date
-    end_date = service.billing_end_date
+    start_date = service.billing_start_date_as_delivered
+    end_date = service.billing_end_date_as_delivered
 
     return [] unless start_date && end_date
 
@@ -260,11 +260,11 @@ class RevenueCalculator
   #   - :days_billed - Actual days billed in this month
   #   - :proration_factor - Decimal factor for proration (days_billed / days_in_month)
   def calculate_billing_periods
-    return [] unless service&.billing_start_date && service&.billing_end_date
+    return [] unless service&.billing_start_date_as_delivered && service&.billing_end_date_as_delivered
 
     periods = []
-    start_date = service.billing_start_date
-    end_date = service.billing_end_date
+    start_date = service.billing_start_date_as_delivered
+    end_date = service.billing_end_date_as_delivered
 
     # Start with the first month of the service
     current_year = start_date.year
@@ -322,10 +322,10 @@ class RevenueCalculator
     return unless service
 
     @errors << "MRR is required" unless service.mrr && service.mrr >= 0
-    @errors << "Term months is required" unless service.term_months && service.term_months.positive?
+    @errors << "Term months is required" unless service.term_months_as_delivered && service.term_months_as_delivered.positive?
 
-    if service.billing_start_date && service.billing_end_date
-      @errors << "End date must be after or equal to start date" if service.billing_end_date < service.billing_start_date
+    if service.billing_start_date_as_delivered && service.billing_end_date_as_delivered
+      @errors << "End date must be after or equal to start date" if service.billing_end_date_as_delivered < service.billing_start_date_as_delivered
     end
 
     return unless service.annual_escalator && (service.annual_escalator.negative? || service.annual_escalator > 100)

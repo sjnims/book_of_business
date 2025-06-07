@@ -67,16 +67,16 @@ Transform the current Excel-based contract tracking system into a robust, multi-
 - [x] 2.2.8 Create background job for daily service status checks
 - [x] 2.2.9 Remove manual status transitions for automated statuses
 
-#### 2.3: As Sold vs As Delivered Implementation
+#### 2.3: As Sold vs As Delivered Implementation ✅
 
-- [ ] 2.3.1 Add As Sold fields to Service model (preserve original values)
-- [ ] 2.3.2 Add As Delivered fields to Service model (dynamic values)
-- [ ] 2.3.3 Create migration to add new fields and populate existing data
-- [ ] 2.3.4 Update Service model to handle As Sold/As Delivered logic
-- [ ] 2.3.5 Update ServiceStatusUpdateJob to handle monthly extensions
-- [ ] 2.3.6 Update RevenueCalculator to use As Delivered values
-- [ ] 2.3.7 Add tests for As Sold/As Delivered behavior
-- [ ] 2.3.8 Update UI to show both As Sold and As Delivered values
+- [x] 2.3.1 Add As Sold fields to Service model (preserve original values)
+- [x] 2.3.2 Add As Delivered fields to Service model (dynamic values)
+- [x] 2.3.3 Create migration to add new fields and populate existing data
+- [x] 2.3.4 Update Service model to handle As Sold/As Delivered logic
+- [x] 2.3.5 Update ServiceStatusUpdateJob to handle monthly extensions
+- [x] 2.3.6 Update RevenueCalculator to use As Delivered values
+- [x] 2.3.7 Add tests for As Sold/As Delivered behavior
+- [x] 2.3.8 Update UI to show both As Sold and As Delivered values
 
 #### 2.4: Business Rules & Validations
 
