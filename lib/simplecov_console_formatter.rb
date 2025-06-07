@@ -2,7 +2,7 @@ require "simplecov"
 
 # Custom SimpleCov formatter that displays coverage results in the console
 # Groups files by category and shows coverage percentages with color coding
-class SimpleCovConsoleFormatter
+class SimplecovConsoleFormatter
   # Formats SimpleCov results for console output
   #
   # @param result [SimpleCov::Result] The coverage result from SimpleCov
