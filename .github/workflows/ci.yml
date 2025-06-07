@@ -228,8 +228,19 @@ jobs:
 
       - name: Setup test database
         run: |
-          bin/rails db:create
-          bin/rails db:schema:load
+          # Create primary database
+          bin/rails db:create:primary || true
+          bin/rails db:schema:load:primary
+          
+          # Create and setup cable database
+          bin/rails db:create:cable || true
+          bin/rails db:schema:load:cable || true
+          
+          # Create and setup queue database  
+          bin/rails db:create:queue || true
+          bin/rails db:schema:load:queue || true
+          
+          # Seed if needed
           bin/rails db:seed RAILS_ENV=test || true
 
       - name: Verify schema is up to date
@@ -322,8 +333,17 @@ jobs:
 
       - name: Setup database
         run: |
-          bin/rails db:create
-          bin/rails db:schema:load
+          # Create primary database
+          bin/rails db:create:primary || true
+          bin/rails db:schema:load:primary
+          
+          # Create and setup cable database
+          bin/rails db:create:cable || true
+          bin/rails db:schema:load:cable || true
+          
+          # Create and setup queue database  
+          bin/rails db:create:queue || true
+          bin/rails db:schema:load:queue || true
 
       - name: Check for N+1 queries
         run: |
