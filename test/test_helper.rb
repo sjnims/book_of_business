@@ -12,9 +12,14 @@ SimpleCov.start "rails" do
   add_filter "/vendor/"
   add_filter "/db/"
   add_filter "/bin/"
+  add_filter "/tmp/"
+  add_filter "/coverage/"
 
   # Ensure proper source file detection
   track_files "{app,lib}/**/*.rb"
+
+  # Enable branch coverage
+  enable_coverage :branch
 
   formatter SimpleCov::Formatter::MultiFormatter.new([
     SimpleCov::Formatter::HTMLFormatter,
@@ -27,6 +32,11 @@ SimpleCov.start "rails" do
   add_group "Services", "app/services"
   add_group "Helpers", "app/helpers"
   add_group "Libraries", "lib"
+  add_group "Jobs", "app/jobs"
+  add_group "Mailers", "app/mailers"
+
+  # Set minimum coverage
+  minimum_coverage 80 if ENV["CI"]
 end
 
 require_relative "../config/environment"

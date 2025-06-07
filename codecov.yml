@@ -1,6 +1,10 @@
 codecov:
   require_ci_to_pass: true
 
+# Fix path issues in CI
+fixes:
+  - "/home/runner/work/book_of_business/book_of_business/::"  # Remove CI absolute path prefix
+
 coverage:
   precision: 2
   round: down
