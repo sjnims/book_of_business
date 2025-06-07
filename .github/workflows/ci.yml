@@ -169,14 +169,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache APT packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/ci.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-
+      # APT cache removed - requires sudo permissions that cause tar errors
 
       - name: Install system dependencies
         run: |
@@ -215,7 +208,6 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            coverage/assets
             tmp/cache
           key: ${{ runner.os }}-test-${{ matrix.ruby-version }}-${{ hashFiles('test/**/*') }}
           restore-keys: |
