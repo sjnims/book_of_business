@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_01_030652) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_07_181500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,8 +81,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_01_030652) do
     t.string "service_name"
     t.integer "term_months"
     t.string "status"
-    t.date "start_date"
-    t.date "end_date"
     t.decimal "units", precision: 10, scale: 2
     t.decimal "unit_price", precision: 15, scale: 2
     t.decimal "nrcs", precision: 15, scale: 2
@@ -93,28 +91,31 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_01_030652) do
     t.string "site"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["end_date"], name: "index_services_on_end_date"
+    t.date "billing_start_date"
+    t.date "billing_end_date"
+    t.date "rev_rec_start_date"
+    t.date "rev_rec_end_date"
+    t.index ["billing_end_date"], name: "index_services_on_billing_end_date"
+    t.index ["billing_start_date"], name: "index_services_on_billing_start_date"
     t.index ["order_id"], name: "index_services_on_order_id"
+    t.index ["rev_rec_end_date"], name: "index_services_on_rev_rec_end_date"
+    t.index ["rev_rec_start_date"], name: "index_services_on_rev_rec_start_date"
     t.index ["service_type"], name: "index_services_on_service_type"
     t.index ["site"], name: "index_services_on_site"
-    t.index ["start_date"], name: "index_services_on_start_date"
     t.index ["status"], name: "index_services_on_status"
   end
 
   create_table "users", force: :cascade do |t|
-    t.string "email", default: "", null: false
-    t.string "encrypted_password", default: "", null: false
-    t.string "reset_password_token"
-    t.datetime "reset_password_sent_at"
-    t.datetime "remember_created_at"
-    t.string "first_name"
-    t.string "last_name"
-    t.string "role", default: "user"
-    t.boolean "active", default: true
+    t.string "email", null: false
+    t.string "name", null: false
+    t.integer "role", default: 0, null: false
+    t.string "password_digest", null: false
+    t.string "password_reset_token"
+    t.datetime "password_reset_sent_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["password_reset_token"], name: "index_users_on_password_reset_token", unique: true
   end
 
   add_foreign_key "orders", "customers"

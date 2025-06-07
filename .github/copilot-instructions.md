@@ -26,6 +26,22 @@ Book of Business is a Rails 8.0.2 application designed to replace an Excel-based
 - **Services**: Manage individual services within orders, including pricing, terms, and status
 - **Revenue Calculations**: Handle complex MRR, ARR, GAAP MRR calculations with annual escalators
 
+### Important Date Field Distinctions
+
+- **Order Dates**:
+  - `sold_date`: The date when the order was closed/won (for sales reporting)
+
+- **Service Dates** (each service can have different dates):
+  - `billing_start_date`: When customer billing begins for this service
+  - `billing_end_date`: When customer billing ends (typically start date + term months - 1 day)
+  - `rev_rec_start_date`: When revenue recognition begins (may differ from billing)
+  - `rev_rec_end_date`: When revenue recognition ends
+  
+- **Key Concepts**:
+  - NRCs = Non-Recurring Charges (one-time fees)
+  - Billing and revenue recognition dates are usually the same but can differ
+  - Each service within an order tracks its own dates independently
+
 ### Critical Features
 
 - Multi-user concurrent access (replacing single-user Excel limitation)
@@ -87,8 +103,10 @@ The application uses PostgreSQL with multiple databases:
 ### Revenue Calculations
 
 - TCV Formula: FV(Annuity Due) = C × [(1+i)^n - 1 / i] × (1+i) + NRCs
+  - Where NRCs = Non-Recurring Charges (stored in `services.nrcs`)
 - GAAP MRR = (TCV - NRCs) / contract term in months
 - Handle complex renewal scenarios with pro-rating
+- Revenue calculations use the service's `rev_rec_start_date` and `rev_rec_end_date`
 
 ### Service Status Workflow
 
@@ -123,6 +141,7 @@ The application uses PostgreSQL with multiple databases:
 - Authentication: Rails built-in (has_secure_password), NOT Devise
 - Audit Trail: Custom implementation, NOT paper_trail or audited gems
 - Code Coverage: Codecov.io for tracking test coverage
+- Documentation: Use RDoc style comments (Ruby standard), NOT Google-style docstrings
 - Keep it simple - avoid unnecessary gems when Rails provides the functionality
 
 ## Chat Preferences

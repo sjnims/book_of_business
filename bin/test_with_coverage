@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+# This script runs tests with proper coverage collection for parallel testing
+
+require "fileutils"
+
+# Clean up old coverage data
+FileUtils.rm_rf("coverage/.resultset*.json")
+
+# Run tests
+system("rails test #{ARGV.join(' ')}")
+test_exit_code = $?.exitstatus
+
+# Collate coverage results
+if test_exit_code == 0
+  puts "\nCollating coverage results..."
+  system("rails coverage:report")
+end
+
+# Exit with the same code as the tests
+exit test_exit_code

@@ -16,19 +16,19 @@ Transform the current Excel-based contract tracking system into a robust, multi-
 - [x] 1.1.2 Configure Solid Queue, Cable, and Cache
 - [x] 1.1.3 Setup CI/CD pipeline with GitHub Actions
 - [x] 1.1.4 Configure code quality tools (RuboCop, Codecov)
-- [ ] 1.1.5 Implement Rails built-in authentication (has_secure_password)
-- [ ] 1.1.6 Create User model with roles (admin, manager, sales_rep, viewer)
-- [ ] 1.1.7 Build login/logout functionality
-- [ ] 1.1.8 Add password reset capability
+- [x] 1.1.5 Implement Rails built-in authentication (has_secure_password)
+- [x] 1.1.6 Create User model with roles (admin, manager, sales_rep, viewer)
+- [x] 1.1.7 Build login/logout functionality
+- [x] 1.1.8 Add password reset capability
 
 #### 1.2: Core Models & Database Design
 
-- [ ] 1.2.1 Create Customer model and migrations
-- [ ] 1.2.2 Create Order model with relationships
-- [ ] 1.2.3 Create Service model with complex associations
-- [ ] 1.2.4 Design and implement revenue calculation fields
-- [ ] 1.2.5 Add database indexes for performance
-- [ ] 1.2.6 Setup seed data for development
+- [x] 1.2.1 Create Customer model and migrations
+- [x] 1.2.2 Create Order model with relationships
+- [x] 1.2.3 Create Service model with complex associations
+- [x] 1.2.4 Design and implement revenue calculation fields
+- [x] 1.2.5 Add database indexes for performance
+- [x] 1.2.6 Setup seed data for development
 
 #### 1.3: Custom Audit Trail System
 

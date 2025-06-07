@@ -22,6 +22,45 @@
   </head>
 
   <body>
-    <%= yield %>
+    <header class="main-header">
+      <nav class="navbar">
+        <div class="navbar-brand">
+          <%= link_to "Book of Business", root_path %>
+        </div>
+        
+        <div class="navbar-menu">
+          <% if logged_in? %>
+            <span class="navbar-user">
+              Welcome, <%= current_user.name %>
+              <span class="user-role">(<%= current_user.role.humanize %>)</span>
+            </span>
+            
+            <% if current_user.admin? %>
+              <%= link_to "Create User", new_user_path, class: "navbar-link" %>
+            <% end %>
+            
+            <%= button_to "Logout", logout_path, method: :delete, class: "btn btn-outline" %>
+          <% else %>
+            <%= link_to "Login", login_path, class: "btn btn-primary" %>
+          <% end %>
+        </div>
+      </nav>
+    </header>
+
+    <main class="main-content">
+      <% if flash[:notice] %>
+        <div class="alert alert-success">
+          <%= flash[:notice] %>
+        </div>
+      <% end %>
+      
+      <% if flash[:alert] %>
+        <div class="alert alert-danger">
+          <%= flash[:alert] %>
+        </div>
+      <% end %>
+
+      <%= yield %>
+    </main>
   </body>
 </html>

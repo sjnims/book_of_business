@@ -40,10 +40,20 @@ Our new system should capture the key sales deal attributes and support relation
 - **Service Type/Name:** What service was sold.
 - **Term Length:** Number of months for the service (may vary per service within one order).
 - **Service Status:** Enum values such as pending installation, active, extended (beyond contract term), canceled, or renewed.
-- **Service Start and End Dates:** Dates effective once installation begins.
+- **Billing Start and End Dates:** When customer billing begins and ends for this service.
+- **Revenue Recognition Start and End Dates:** When revenue recognition begins and ends (may differ from billing dates).
 - **Units:** Quantity or other measure depending on the service type.
 - **Unit Price:** Cost per unit.
-- **NRCs:** Any non-recurring fees associated with the service.
+- **NRCs (Non-Recurring Charges):** Any one-time fees associated with the service.
+
+### Important Date Distinctions
+
+- **Order Level:** Only tracks `sold_date` (when the deal was closed/won for sales reporting)
+- **Service Level:** Each service within an order independently tracks:
+  - `billing_start_date` and `billing_end_date`: Customer billing period
+  - `rev_rec_start_date` and `rev_rec_end_date`: Revenue recognition period
+  - These dates are usually the same but can differ based on business requirements
+  - End dates are typically calculated as start date + term months - 1 day
 
 • **Revenue & Calculations:**
   These fields may be computed fields or stored for historical record:

@@ -1,0 +1,26 @@
+<div class="auth-container">
+  <h1>Forgot Password?</h1>
+  <p>Enter your email address and we'll send you instructions to reset your password.</p>
+  
+  <%= form_with url: password_resets_path, local: true do |form| %>
+    <% if flash[:alert] %>
+      <div class="alert alert-danger">
+        <%= flash[:alert] %>
+      </div>
+    <% end %>
+
+    <div class="form-group">
+      <%= form.label :email %>
+      <%= form.email_field :email, 
+          class: "form-control", 
+          required: true,
+          autofocus: true,
+          placeholder: "Enter your email" %>
+    </div>
+
+    <div class="form-actions">
+      <%= form.submit "Send Reset Instructions", class: "btn btn-primary" %>
+      <%= link_to "Back to Login", login_path, class: "btn btn-secondary" %>
+    </div>
+  <% end %>
+</div>

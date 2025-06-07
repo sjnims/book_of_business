@@ -3,6 +3,11 @@ ENV["RAILS_ENV"] ||= "test"
 # Code coverage setup - must be before loading Rails
 require "simplecov"
 require "simplecov-cobertura"
+require_relative "../lib/simplecov_console_formatter"
+
+# Configure SimpleCov for parallel testing
+SimpleCov.use_merging true
+SimpleCov.command_name "rails_test_#{$$}" # Use process ID for uniqueness
 
 SimpleCov.start "rails" do
   root File.expand_path("..", __dir__)
@@ -14,6 +19,7 @@ SimpleCov.start "rails" do
   add_filter "/bin/"
   add_filter "/tmp/"
   add_filter "/coverage/"
+  add_filter "/lib/simplecov_console_formatter.rb"
 
   # Ensure proper source file detection
   track_files "{app,lib}/**/*.rb"
@@ -24,6 +30,7 @@ SimpleCov.start "rails" do
   formatter SimpleCov::Formatter::MultiFormatter.new([
     SimpleCov::Formatter::HTMLFormatter,
     SimpleCov::Formatter::CoberturaFormatter,
+    SimpleCovConsoleFormatter,
   ])
 
   # Add metadata for Codecov
@@ -67,6 +74,17 @@ module ActiveSupport
   class TestCase
     # Run tests in parallel with specified workers
     parallelize(workers: :number_of_processors)
+
+    # Configure parallel test hooks for SimpleCov
+    parallelize_setup do |worker|
+      # Each worker gets a unique command name
+      SimpleCov.command_name "rails_test_worker_#{worker}"
+    end
+
+    parallelize_teardown do |worker|
+      # Ensure results are written
+      SimpleCov.result
+    end
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
