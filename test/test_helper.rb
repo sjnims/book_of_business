@@ -18,11 +18,26 @@ end
 require_relative "../config/environment"
 require "rails/test_help"
 require "minitest/reporters"
-Minitest::Reporters.use!(
-  Minitest::Reporters::ProgressReporter.new,
-  ENV,
-  Minitest.backtrace_filter
-)
+
+# Configure reporters based on environment
+if ENV["CI"]
+  # In CI, use both JUnit (for test results) and Progress (for console output)
+  Minitest::Reporters.use!(
+    [
+      Minitest::Reporters::JUnitReporter.new("tmp/test-results"),
+      Minitest::Reporters::ProgressReporter.new,
+    ],
+    ENV,
+    Minitest.backtrace_filter
+  )
+else
+  # In development, just use the progress reporter
+  Minitest::Reporters.use!(
+    Minitest::Reporters::ProgressReporter.new,
+    ENV,
+    Minitest.backtrace_filter
+  )
+end
 
 module ActiveSupport
   class TestCase

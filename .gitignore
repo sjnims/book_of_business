@@ -64,6 +64,7 @@
 # Testing artifacts
 /tmp/screenshots/
 /tmp/capybara/
+/tmp/test-results/
 /test/reports/
 /spec/reports/
 /spec/examples.txt
@@ -137,7 +138,6 @@ $RECYCLE.BIN/
 .guard_history
 .powder
 .rvmrc
-.ruby-version
 .ruby-gemset
 .tool-versions
 
