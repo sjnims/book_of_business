@@ -1,0 +1,100 @@
+# CodeQL configuration for enterprise Rails security analysis
+name: "Enterprise Rails Security Configuration"
+
+# Paths to analyze - be specific for better performance
+paths:
+  - app
+  - lib
+  - config
+  - db/migrate
+  - Gemfile
+  - Gemfile.lock
+
+# Paths to exclude from analysis
+paths-ignore:
+  - test
+  - spec
+  - vendor
+  - tmp
+  - coverage
+  - public/assets
+  - public/packs
+  - node_modules
+  - log
+  - storage
+  - .bundle
+
+# Query filters for comprehensive security analysis
+query-filters:
+  # Include all security queries
+  - include:
+      tags contain:
+        - "security"
+        - "external/cwe"
+  
+  # Include high and medium precision queries
+  - include:
+      precision:
+        - "very-high"
+        - "high" 
+        - "medium"
+  
+  # Include all severity levels
+  - include:
+      severity:
+        - "error"
+        - "warning"
+        - "recommendation"
+  
+  # Rails-specific security patterns
+  - include:
+      tags contain any:
+        - "rails"
+        - "ruby"
+        - "sql-injection"
+        - "xss"
+        - "csrf"
+        - "authentication"
+        - "authorization"
+        - "crypto"
+        - "path-traversal"
+        - "command-injection"
+        - "mass-assignment"
+        - "xxe"
+        - "deserialization"
+        - "file-upload"
+        - "ldap-injection"
+        - "session-fixation"
+  
+  # Code quality queries that impact security
+  - include:
+      tags contain any:
+        - "correctness"
+        - "reliability"
+        - "maintainability"
+  
+  # Exclude test queries
+  - exclude:
+      tags contain:
+        - "test"
+        - "example"
+        - "experimental/effectiveness"
+
+# Additional query packs for Ruby/Rails
+packs:
+  - codeql/ruby-queries
+  - codeql/ruby-all
+
+# Performance settings
+timeout: 300  # 5 minutes per query
+ram: 7000     # 7GB RAM allocation
+threads: 4    # Parallel processing
+
+# Enable additional features
+features:
+  # Enable data flow analysis for better tracking
+  dataflow: true
+  # Enable taint tracking for input validation
+  taint-tracking: true
+  # Enable call graph construction
+  call-graph: true

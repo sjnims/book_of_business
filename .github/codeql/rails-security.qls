@@ -1,0 +1,58 @@
+# Rails-specific security query suite for enterprise applications
+- description: Enterprise Rails security queries
+- queries: .
+- apply: tagged-queries
+
+# Include all security queries
+- include:
+    tags contain:
+      - "security"
+      - "external/cwe"
+      
+# Include Rails-specific patterns
+- include:
+    tags contain:
+      - "rails"
+      - "ruby"
+      
+# Include high and medium precision queries
+- include:
+    precision:
+      - "very-high"
+      - "high"
+      - "medium"
+      
+# Include all severity levels for comprehensive analysis
+- include:
+    severity:
+      - "error"
+      - "warning"
+      - "recommendation"
+      
+# Specific security concerns for Rails
+- include:
+    tags contain any:
+      - "sql-injection"
+      - "xss"
+      - "csrf"
+      - "authentication"
+      - "authorization"
+      - "crypto"
+      - "path-traversal"
+      - "command-injection"
+      - "xxe"
+      - "deserialization"
+      - "mass-assignment"
+      
+# Code quality queries relevant to security
+- include:
+    tags contain any:
+      - "correctness"
+      - "maintainability"
+      - "reliability"
+      
+# Exclude test-only queries
+- exclude:
+    tags contain:
+      - "test"
+      - "example"

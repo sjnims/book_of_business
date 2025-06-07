@@ -24,8 +24,9 @@ concurrency:
 
 jobs:
   # Security scanning for Ruby dependencies and code
+  # Note: CodeQL analysis runs in a separate workflow for deeper semantic analysis
   security:
-    name: Security Scan
+    name: Security Scan (Brakeman)
     runs-on: ubuntu-latest
 
     steps:
