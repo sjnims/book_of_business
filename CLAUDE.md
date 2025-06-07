@@ -11,11 +11,12 @@ Book of Business is a Rails 8.0.2 application designed to replace an Excel-based
 - **Ruby on Rails**: 8.0.2
 - **Database**: PostgreSQL with Solid Cache, Solid Queue, and Solid Cable
 - **CSS**: Plain CSS (via Propshaft)
-- **JavaScript**: Import Maps
+- **JavaScript**: Import Maps with Turbo & Stimulus (Hotwire)
 - **Testing**: Minitest with minitest-reporters
 - **Background Jobs**: Solid Queue
 - **WebSockets**: Solid Cable
 - **Asset Pipeline**: Propshaft
+- **Frontend**: Turbo for navigation/forms, Stimulus for interactivity
 
 ## Key Business Requirements
 
@@ -143,6 +144,8 @@ The application uses PostgreSQL with multiple databases:
 - Code Coverage: Codecov.io for tracking test coverage
 - Documentation: Use RDoc style comments (Ruby standard), NOT Google-style docstrings
 - Keep it simple - avoid unnecessary gems when Rails provides the functionality
+- Frontend: Use Turbo/Stimulus (Hotwire) for dynamic behavior, avoid heavy JavaScript frameworks
+- Prefer server-side rendering with Turbo enhancements over SPA patterns
 
 ## Chat Preferences
 
