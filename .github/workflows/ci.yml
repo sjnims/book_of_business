@@ -313,7 +313,7 @@ jobs:
       - name: Check for N+1 queries
         run: |
           gem install prosopite
-          echo "Prosopite.scan { require_relative 'config/environment' }" | bin/rails runner -
+          echo "require 'prosopite'; Prosopite.scan { require_relative 'config/environment' }" | bin/rails runner -
 
       - name: Analyze database queries
         run: |
