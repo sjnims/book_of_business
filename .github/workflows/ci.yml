@@ -186,9 +186,14 @@ jobs:
             curl \
             git \
             libpq-dev \
-            libyaml-dev \
-            google-chrome-stable \
-            chromium-chromedriver
+            libyaml-dev
+
+      - name: Set up Chrome
+        run: |
+          # Ubuntu runners have Chrome pre-installed
+          google-chrome --version || echo "Chrome not found"
+          # Set Chrome binary location for Rails system tests
+          echo "SELENIUM_CHROME_BINARY=$(which google-chrome || echo '/usr/bin/google-chrome')" >> $GITHUB_ENV
 
       - name: Set up Ruby ${{ matrix.ruby-version }}
         uses: ruby/setup-ruby@v1
