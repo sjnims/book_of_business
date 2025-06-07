@@ -229,6 +229,7 @@ jobs:
 
       - name: Run unit and integration tests
         run: |
+          mkdir -p tmp/test-results
           bin/rails test --verbose
 
       - name: Run system tests
@@ -255,7 +256,7 @@ jobs:
           root_dir: ${{ github.workspace }}
 
       - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && matrix.ruby-version == '3.4.4' }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -263,6 +264,7 @@ jobs:
           flags: unittests
           name: book-of-business-tests
           fail_ci_if_error: false
+        continue-on-error: true  # Don't fail if no test results found
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
