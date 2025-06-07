@@ -11,6 +11,7 @@ on:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
+    # For Rails apps: analyzes Ruby code and JavaScript (Stimulus/Turbo/Import Maps)
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
     
@@ -24,11 +25,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'ruby', 'javascript-typescript' ]
+        language: [ 'ruby', 'javascript' ]
         include:
           - language: ruby
             build-mode: none
-          - language: javascript-typescript
+          - language: javascript
             build-mode: none
 
     steps:
@@ -62,15 +63,6 @@ jobs:
         build-mode: ${{ matrix.build-mode }}
         # Use our comprehensive configuration file
         config-file: ./.github/codeql/codeql-config.yml
-
-    # For JavaScript/TypeScript analysis with better context
-    - name: Setup Node (for JavaScript analysis)
-      if: matrix.language == 'javascript-typescript'
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: '**/package-lock.json'
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

@@ -9,6 +9,10 @@ paths:
   - db/migrate
   - Gemfile
   - Gemfile.lock
+  # Rails JavaScript locations
+  - app/javascript
+  - app/assets/javascripts
+  - public/javascripts
 
 # Paths to exclude from analysis
 paths-ignore:
