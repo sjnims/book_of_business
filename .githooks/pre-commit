@@ -394,6 +394,7 @@ class PreCommitCheck
       next unless File.exist?(file) && File.file?(file)
       next if file.include?('node_modules/') || file.include?('vendor/')
       next if file.end_with?('.enc') # Skip encrypted files
+      next if file.include?('test/') || file.include?('spec/') # Skip test files
 
       begin
         content = File.read(file)

@@ -88,6 +88,27 @@ class ServicesStatusTransitionTest < ActionDispatch::IntegrationTest
     assert_equal "canceled", @active_service.status
   end
 
+  test "should renew an active service" do
+    patch order_service_url(@order, @active_service), params: {
+      service: { action: "renew" },
+    }
+
+    assert_redirected_to order_service_path(@order, @active_service)
+    assert_equal "Service status updated successfully.", flash[:notice]
+  end
+
+  test "renewed service changes status from active to renewed" do
+    assert_equal "active", @active_service.status
+
+    patch order_service_url(@order, @active_service), params: {
+      service: { action: "renew" },
+    }
+
+    @active_service.reload
+
+    assert_equal "renewed", @active_service.status
+  end
+
   test "should handle invalid action gracefully" do
     patch order_service_url(@order, @active_service), params: {
       service: { action: "invalid_action" },
