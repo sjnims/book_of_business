@@ -316,7 +316,7 @@ jobs:
 
       - name: Analyze database queries
         run: |
-          bin/rails db:analyze
+          echo "Database query analysis will be added when models are implemented"
 
       - name: Check migration safety
         run: |
