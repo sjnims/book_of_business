@@ -27,6 +27,8 @@ env:
   BUNDLE_RETRY: 3
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
+  POSTGRES_HOST: localhost
+  POSTGRES_PORT: 5432
   DATABASE_URL: postgres://postgres:postgres@localhost:5432/book_of_business_test
 
 # Cancel in-progress workflows when a new workflow is triggered
