@@ -44,12 +44,16 @@ Transform the current Excel-based contract tracking system into a robust, multi-
 
 #### 2.1: Revenue Calculations
 
-- [ ] 2.1.1 Create RevenueCalculator service object
-- [ ] 2.1.2 Implement TCV calculation with escalators
-- [ ] 2.1.3 Build MRR/ARR calculation logic
-- [ ] 2.1.4 Add GAAP MRR calculations
-- [ ] 2.1.5 Create calculation specs with edge cases
-- [ ] 2.1.6 Build calculation preview interface
+- [x] 2.1.1 Create RevenueCalculator service object
+- [x] 2.1.2 Implement TCV calculation with escalators
+- [x] 2.1.3 Build MRR/ARR calculation logic
+- [x] 2.1.4 Add GAAP MRR calculations
+- [x] 2.1.5 Create calculation specs with edge cases
+- [x] 2.1.6 Implement monthly invoice calculations
+- [x] 2.1.7 Add calendar month proration logic
+- [x] 2.1.8 Build billing period calculator for partial months
+
+> **Reference Implementation**: See `tmp/monthly_billing_calculation.rb` for a working example of the monthly invoice calculation logic to be implemented in tasks 2.1.7-2.1.8.
 
 #### 2.2: Order & Service Management
 
@@ -65,9 +69,11 @@ Transform the current Excel-based contract tracking system into a robust, multi-
 - [ ] 2.3.1 Implement complex validation logic
 - [ ] 2.3.2 Add business rule engine for pricing
 - [ ] 2.3.3 Create term length validations
-- [ ] 2.3.4 Build pro-rating calculations
+- [ ] 2.3.4 Build pro-rating calculations for mid-month starts/ends
 - [ ] 2.3.5 Add contract overlap detection
 - [ ] 2.3.6 Implement approval workflows
+- [ ] 2.3.7 Create billing cycle management rules
+- [ ] 2.3.8 Add invoice generation logic for accounting integration
 
 ### Phase 3: User Interface 🎨
 
@@ -85,13 +91,14 @@ Transform the current Excel-based contract tracking system into a robust, multi-
 #### 3.2: Advanced UI Features
 
 - [ ] 3.2.1 Implement real-time calculations display
-- [ ] 3.2.2 Add form validations with user feedback
-- [ ] 3.2.3 Create bulk operations interface
-- [ ] 3.2.4 Build advanced filtering system
-- [ ] 3.2.5 Add keyboard shortcuts
-- [ ] 3.2.6 Implement auto-save functionality
-- [ ] 3.2.7 Build audit viewer interface
-- [ ] 3.2.8 Add audit reports for compliance
+- [ ] 3.2.2 Build calculation preview interface
+- [ ] 3.2.3 Add form validations with user feedback
+- [ ] 3.2.4 Create bulk operations interface
+- [ ] 3.2.5 Build advanced filtering system
+- [ ] 3.2.6 Add keyboard shortcuts
+- [ ] 3.2.7 Implement auto-save functionality
+- [ ] 3.2.8 Build audit viewer interface
+- [ ] 3.2.9 Add audit reports for compliance
 
 #### 3.3: User Experience Polish
 

@@ -1,0 +1,465 @@
+#!/usr/bin/env ruby
+
+# Pre-push hook to ensure code quality before pushing to remote
+# This is the final quality gate - more comprehensive than pre-commit
+# Runs critical checks on the entire codebase to ensure consistency
+
+require 'open3'
+require 'json'
+require 'time'
+
+# Pre-push check class that runs comprehensive quality checks
+# before allowing code to be pushed to the remote repository
+class PrePushCheck
+  COLORS = {
+    red: "\e[31m",
+    green: "\e[32m",
+    yellow: "\e[33m",
+    blue: "\e[34m",
+    cyan: "\e[36m",
+    magenta: "\e[35m",
+    reset: "\e[0m",
+  }.freeze
+
+  # Minimum required code coverage percentage
+  MIN_COVERAGE = 90
+
+  # Maximum allowed complexity scores
+  MAX_ABC_COMPLEXITY = 15
+  MAX_CYCLOMATIC_COMPLEXITY = 6
+
+  # Run all pre-push checks
+  def self.run
+    new.run
+  end
+
+  # Execute all configured checks and report results
+  def run
+    start_time = Time.now.utc
+
+    puts "#{COLORS[:blue]}═══════════════════════════════════════════════════#{COLORS[:reset]}"
+    puts "#{COLORS[:blue]}Running comprehensive pre-push checks...#{COLORS[:reset]}"
+    puts "#{COLORS[:blue]}═══════════════════════════════════════════════════#{COLORS[:reset]}\n"
+
+    # Get information about what's being pushed
+    analyze_push
+
+    checks = [
+      { name: "Ruby Syntax (All Files)", method: :check_ruby_syntax },
+      { name: "RuboCop Style", method: :check_rubocop },
+      { name: "Security Scan (Brakeman)", method: :check_security },
+      { name: "Code Complexity", method: :check_complexity },
+      { name: "Test Suite", method: :check_tests },
+      { name: "Code Coverage", method: :check_coverage },
+      { name: "Database Consistency", method: :check_database },
+      { name: "Dependency Audit", method: :check_dependencies },
+      { name: "Documentation Coverage", method: :check_documentation },
+      { name: "Branch Protection", method: :check_branch_protection },
+      { name: "Commit Messages", method: :check_commit_messages },
+      { name: "File Permissions", method: :check_file_permissions },
+    ]
+
+    failed_checks = []
+    warnings = []
+
+    checks.each do |check|
+      print "#{check[:name]}... "
+      result = send(check[:method])
+
+      case result
+      when true
+        puts "#{COLORS[:green]}✓#{COLORS[:reset]}"
+      when :warning
+        puts "#{COLORS[:yellow]}⚠#{COLORS[:reset]}"
+        warnings << check[:name]
+      else
+        puts "#{COLORS[:red]}✗#{COLORS[:reset]}"
+        failed_checks << check[:name]
+      end
+    end
+
+    duration = (Time.now.utc - start_time).round(2)
+
+    # Show summary
+    puts "\n#{COLORS[:blue]}═══════════════════════════════════════════════════#{COLORS[:reset]}"
+    puts "#{COLORS[:blue]}Summary (completed in #{duration}s):#{COLORS[:reset]}"
+    puts "  #{COLORS[:green]}✓ Passed: #{checks.length - failed_checks.length - warnings.length}#{COLORS[:reset]}"
+    puts "  #{COLORS[:yellow]}⚠ Warnings: #{warnings.length}#{COLORS[:reset]}" if warnings.any?
+    puts "  #{COLORS[:red]}✗ Failed: #{failed_checks.length}#{COLORS[:reset]}" if failed_checks.any?
+    puts "#{COLORS[:blue]}═══════════════════════════════════════════════════#{COLORS[:reset]}"
+
+    if failed_checks.any?
+      puts "\n#{COLORS[:red]}Push blocked due to failing checks:#{COLORS[:reset]}"
+      failed_checks.each { |check| puts "  #{COLORS[:red]}• #{check}#{COLORS[:reset]}" }
+      puts "\n#{COLORS[:yellow]}Please fix these issues before pushing.#{COLORS[:reset]}"
+      puts "#{COLORS[:yellow]}To bypass (NOT RECOMMENDED): git push --no-verify#{COLORS[:reset]}"
+      exit 1
+    elsif warnings.any?
+      puts "\n#{COLORS[:yellow]}Push allowed with warnings. Please review:#{COLORS[:reset]}"
+      warnings.each { |warning| puts "  #{COLORS[:yellow]}• #{warning}#{COLORS[:reset]}" }
+      puts "\n#{COLORS[:green]}Pushing to remote... 🚀#{COLORS[:reset]}"
+      exit 0
+    else
+      puts "\n#{COLORS[:green]}All checks passed! Pushing to remote... 🚀#{COLORS[:reset]}"
+      exit 0
+    end
+  end
+
+  private
+
+  def analyze_push
+    # Get information about what commits are being pushed
+    remote = ARGV[0] || 'origin'
+
+    # Get list of commits that will be pushed
+    commits = `git rev-list @{u}..HEAD 2>/dev/null`.split("\n")
+
+    if commits.empty?
+      puts "#{COLORS[:cyan]}No new commits to push.#{COLORS[:reset]}\n"
+    else
+      puts "#{COLORS[:cyan]}Pushing #{commits.length} commit(s) to #{remote}#{COLORS[:reset]}\n"
+    end
+
+    @commits_to_push = commits
+  end
+
+  def check_ruby_syntax
+    # Check syntax of all Ruby files in the project
+    ruby_files = Dir.glob("**/*.rb").reject { |f| f.start_with?('vendor/', 'node_modules/') }
+
+    errors = []
+    ruby_files.each do |file|
+      _, stderr, status = Open3.capture3("ruby -c #{file}")
+      errors << "#{file}: #{stderr.strip}" unless status.success?
+    end
+
+    if errors.any?
+      puts "\n#{COLORS[:red]}Syntax errors found:#{COLORS[:reset]}"
+      errors.first(5).each { |error| puts "  • #{error}" }
+      puts "  ... and #{errors.length - 5} more" if errors.length > 5
+      false
+    else
+      true
+    end
+  end
+
+  def check_rubocop
+    stdout, _, status = Open3.capture3("bundle exec rubocop --format json")
+
+    begin
+      result = JSON.parse(stdout)
+      offense_count = result['summary']['offense_count']
+
+      if offense_count.positive?
+        puts "\n#{COLORS[:red]}RuboCop found #{offense_count} offense(s):#{COLORS[:reset]}"
+
+        # Show files with most offenses
+        files_with_offenses = result['files']
+          .select { |f| f['offenses'].any? }
+          .sort_by { |f| -f['offenses'].length }
+          .first(5)
+
+        files_with_offenses.each do |file|
+          puts "  • #{file["path"]}: #{file["offenses"].length} offense(s)"
+        end
+
+        puts "\n#{COLORS[:yellow]}Run 'bundle exec rubocop' for details#{COLORS[:reset]}"
+        false
+      else
+        true
+      end
+    rescue JSON::ParserError
+      # Fallback to regular output
+      stdout, _, status = Open3.capture3("bundle exec rubocop")
+      if !status.success?
+        puts "\n#{COLORS[:red]}RuboCop violations found#{COLORS[:reset]}"
+        false
+      else
+        true
+      end
+    end
+  end
+
+  def check_security
+    # Check if brakeman is available
+    _, _, status = Open3.capture3("which brakeman")
+    unless status.success?
+      puts "\n  #{COLORS[:yellow]}Brakeman not installed. Skipping security check.#{COLORS[:reset]}"
+      return :warning
+    end
+
+    stdout, _, _ = Open3.capture3("brakeman -q --no-pager -f json")
+
+    begin
+      result = JSON.parse(stdout)
+
+      # Check for any warnings
+      warnings = result['warnings'] || []
+      high_confidence = warnings.select { |w| w['confidence'] == 'High' }
+      medium_confidence = warnings.select { |w| w['confidence'] == 'Medium' }
+
+      if high_confidence.any?
+        puts "\n#{COLORS[:red]}High confidence security issues:#{COLORS[:reset]}"
+        high_confidence.first(3).each do |warning|
+          puts "  #{COLORS[:red]}• #{warning["warning_type"]}: #{warning["message"]}#{COLORS[:reset]}"
+          puts "    #{warning["file"]}:#{warning["line"]}"
+        end
+        false
+      elsif medium_confidence.any?
+        puts "\n#{COLORS[:yellow]}Medium confidence security warnings: #{medium_confidence.length}#{COLORS[:reset]}"
+        :warning
+      else
+        true
+      end
+    rescue JSON::ParserError
+      puts "\n  #{COLORS[:yellow]}Could not parse Brakeman output#{COLORS[:reset]}"
+      :warning
+    end
+  end
+
+  def check_complexity
+    # Use rubocop to check code complexity
+    stdout, _, _ = Open3.capture3("bundle exec rubocop --only Metrics --format json")
+
+    begin
+      result = JSON.parse(stdout)
+
+      complexity_issues = []
+      result['files'].each do |file|
+        file['offenses'].each do |offense|
+          if offense['cop_name'].include?('Complexity') || offense['cop_name'].include?('MethodLength')
+            complexity_issues << {
+              file: file['path'],
+              issue: offense['message'],
+              line: offense['location']['line'],
+            }
+          end
+        end
+      end
+
+      if complexity_issues.any?
+        puts "\n#{COLORS[:yellow]}Code complexity issues:#{COLORS[:reset]}"
+        complexity_issues.first(5).each do |issue|
+          puts "  • #{issue[:file]}:#{issue[:line]} - #{issue[:issue]}"
+        end
+        :warning
+      else
+        true
+      end
+    rescue JSON::ParserError
+      true # Don't fail on parse errors
+    end
+  end
+
+  def check_tests
+    puts "\n  Running full test suite..."
+
+    # Capture both stdout and stderr for better error reporting
+    stdout, _, status = Open3.capture3("rails test")
+
+    if status.success?
+      # Extract test statistics
+      if stdout.match(/(\d+) runs, (\d+) assertions, (\d+) failures, (\d+) errors/)
+        runs, assertions, _, _ = $1.to_i, $2.to_i, $3.to_i, $4.to_i
+        puts "  #{COLORS[:green]}#{runs} tests, #{assertions} assertions#{COLORS[:reset]}"
+      end
+      true
+    else
+      puts "\n#{COLORS[:red]}Test failures detected:#{COLORS[:reset]}"
+
+      # Extract and display failures
+      failures = stdout.scan(/Failure:\n(.+?)\n/).flatten
+      failures.first(5).each { |failure| puts "  • #{failure}" }
+      puts "  ... and #{failures.length - 5} more" if failures.length > 5
+
+      puts "\n#{COLORS[:yellow]}Run 'rails test' for full output#{COLORS[:reset]}"
+      false
+    end
+  end
+
+  def check_coverage
+    coverage_file = 'coverage/.last_run.json'
+
+    unless File.exist?(coverage_file)
+      puts "\n  #{COLORS[:yellow]}No coverage data found. Run tests first.#{COLORS[:reset]}"
+      return :warning
+    end
+
+    # Check if coverage is recent (within last hour)
+    if File.mtime(coverage_file) < Time.now.utc - 3600
+      puts "\n  #{COLORS[:yellow]}Coverage data is stale (>1 hour old)#{COLORS[:reset]}"
+      return :warning
+    end
+
+    begin
+      coverage_data = JSON.parse(File.read(coverage_file))
+      line_coverage = coverage_data['result']['line'] || coverage_data['result']['covered_percent']
+
+      if line_coverage < MIN_COVERAGE
+        puts "\n  #{COLORS[:red]}Coverage #{line_coverage.round(2)}% is below minimum #{MIN_COVERAGE}%#{COLORS[:reset]}"
+        false
+      else
+        puts " (#{line_coverage.round(2)}%)"
+        true
+      end
+    rescue => e
+      puts "\n  #{COLORS[:yellow]}Could not read coverage: #{e.message}#{COLORS[:reset]}"
+      :warning
+    end
+  end
+
+  def check_database
+    # Check for pending migrations
+    stdout, _, _ = Open3.capture3("rails db:migrate:status")
+
+    if stdout.include?('down')
+      puts "\n#{COLORS[:red]}Pending migrations detected:#{COLORS[:reset]}"
+      stdout.lines.select { |l| l.include?('down') }.each do |line|
+        puts "  • #{line.strip}"
+      end
+      false
+    else
+      # Check schema.rb is up to date
+      if File.exist?('db/schema.rb')
+        schema_content = File.read('db/schema.rb')
+        if schema_content.include?('<<<<<<< ') || schema_content.include?('>>>>>>> ')
+          puts "\n#{COLORS[:red]}Merge conflicts in schema.rb#{COLORS[:reset]}"
+          false
+        else
+          true
+        end
+      else
+        true
+      end
+    end
+  end
+
+  def check_dependencies
+    vulnerabilities = []
+
+    # Check Ruby gems with bundler-audit
+    if system('which bundle-audit > /dev/null 2>&1')
+      stdout, _, status = Open3.capture3("bundle-audit check --quiet")
+      vulnerabilities << "Ruby gems have known vulnerabilities" unless status.success?
+    end
+
+    # Check for outdated gems
+    stdout, _, _ = Open3.capture3("bundle outdated --parseable")
+    outdated_count = stdout.lines.count { |l| l.include?('newer version available') }
+
+    if vulnerabilities.any?
+      puts "\n#{COLORS[:red]}Security vulnerabilities in dependencies:#{COLORS[:reset]}"
+      vulnerabilities.each { |v| puts "  • #{v}" }
+      false
+    elsif outdated_count > 10
+      puts "\n  #{COLORS[:yellow]}#{outdated_count} outdated dependencies#{COLORS[:reset]}"
+      :warning
+    else
+      true
+    end
+  end
+
+  def check_documentation
+    # Check README exists and is not empty
+    unless File.exist?('README.md') && File.size('README.md') > 100
+      puts "\n  #{COLORS[:yellow]}README.md is missing or too short#{COLORS[:reset]}"
+      return :warning
+    end
+
+    # Count undocumented public methods/classes
+    undocumented_count = 0
+
+    Dir.glob('app/**/*.rb').each do |file|
+      content = File.read(file)
+
+      # Simple check for class-level documentation
+      classes = content.scan(/^class\s+\w+/)
+      classes.each do |klass|
+        undocumented_count += 1 unless content.match?(/^\s*#.*\n\s*#{Regexp.escape(klass)}/)
+      end
+    end
+
+    if undocumented_count > 20
+      puts "\n  #{COLORS[:yellow]}High number of undocumented classes: #{undocumented_count}#{COLORS[:reset]}"
+      :warning
+    else
+      true
+    end
+  end
+
+  def check_branch_protection
+    # Check if pushing to protected branches
+    current_branch = `git rev-parse --abbrev-ref HEAD`.strip
+    # For this project, we'll only protect production and staging branches
+    # main/master are allowed for direct push
+    protected_branches = [ 'production', 'staging' ]
+
+    if protected_branches.include?(current_branch)
+      if ENV['ALLOW_DIRECT_PUSH'] == 'true'
+        puts "\n  #{COLORS[:yellow]}Direct push to #{current_branch} (override enabled)#{COLORS[:reset]}"
+        :warning
+      else
+        puts "\n#{COLORS[:red]}Cannot push directly to protected branch: #{current_branch}#{COLORS[:reset]}"
+        puts "  #{COLORS[:yellow]}Please create a pull request instead#{COLORS[:reset]}"
+        false
+      end
+    else
+      true
+    end
+  end
+
+  def check_commit_messages
+    return true if @commits_to_push.empty?
+
+    invalid_messages = []
+
+    @commits_to_push.each do |commit|
+      message = `git log -1 --pretty=%B #{commit}`.strip
+
+      # Check commit message format
+      # Should start with type: (feat|fix|docs|style|refactor|test|chore)
+      unless message.match?(/^(feat|fix|docs|style|refactor|test|chore|build|ci|perf|revert)(\(.+?\))?: .{3,}/)
+        # Allow merge commits
+        invalid_messages << message.lines.first.strip unless message.start_with?('Merge')
+      end
+
+      # Check message length
+      first_line = message.lines.first
+      invalid_messages << "#{first_line[0..30]}... (too long: #{first_line.length} chars)" if first_line && first_line.length > 72
+    end
+
+    if invalid_messages.any?
+      puts "\n#{COLORS[:yellow]}Non-conventional commit messages:#{COLORS[:reset]}"
+      invalid_messages.first(3).each { |msg| puts "  • #{msg}" }
+      puts "\n  #{COLORS[:yellow]}Consider using conventional commits: type(scope): description#{COLORS[:reset]}"
+      :warning
+    else
+      true
+    end
+  end
+
+  def check_file_permissions
+    # Check for files with incorrect permissions
+    executable_extensions = [ '.rb', '.yml', '.md', '.json', '.erb', '.css', '.js' ]
+    incorrect_permissions = []
+
+    Dir.glob('**/*').each do |file|
+      next unless File.file?(file)
+      next if file.start_with?('vendor/', 'node_modules/', 'tmp/', '.git/')
+
+      incorrect_permissions << file if File.executable?(file) && executable_extensions.any? { |ext| file.end_with?(ext) }
+    end
+
+    if incorrect_permissions.any?
+      puts "\n#{COLORS[:yellow]}Files with incorrect executable permissions:#{COLORS[:reset]}"
+      incorrect_permissions.first(5).each { |file| puts "  • #{file}" }
+      puts "\n  #{COLORS[:yellow]}Fix with: chmod -x #{incorrect_permissions.join(" ")}#{COLORS[:reset]}"
+      :warning
+    else
+      true
+    end
+  end
+end
+
+# Run the checks
+PrePushCheck.run

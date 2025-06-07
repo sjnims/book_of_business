@@ -1,0 +1,495 @@
+#!/usr/bin/env ruby
+
+# Pre-commit hook to ensure code quality
+# Checks for:
+# - RuboCop style violations
+# - Ruby syntax errors
+# - Test failures
+# - Security vulnerabilities
+# - Code coverage
+# - Database migrations
+# - Missing documentation
+# - TODO/FIXME comments
+# - Large files
+# - Credentials/secrets
+
+require 'fileutils'
+require 'open3'
+require 'json'
+
+# Pre-commit check class that runs various code quality checks
+# before allowing a commit to proceed
+class PreCommitCheck
+  COLORS = {
+    red: "\e[31m",
+    green: "\e[32m",
+    yellow: "\e[33m",
+    blue: "\e[34m",
+    magenta: "\e[35m",
+    reset: "\e[0m",
+  }.freeze
+
+  # Maximum file size in bytes (5MB)
+  MAX_FILE_SIZE = 5 * 1024 * 1024
+
+  # Patterns that might indicate secrets
+  SECRET_PATTERNS = [
+    /password\s*[:=]\s*["'][^"']+["']/i,
+    /secret\s*[:=]\s*["'][^"']+["']/i,
+    /api_key\s*[:=]\s*["'][^"']+["']/i,
+    /access_token\s*[:=]\s*["'][^"']+["']/i,
+    /private_key\s*[:=]\s*["'][^"']+["']/i,
+    /-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----/,
+  ].freeze
+
+  # Run all pre-commit checks
+  def self.run
+    new.run
+  end
+
+  # Execute all configured checks and report results
+  def run
+    puts "#{COLORS[:blue]}Running pre-commit checks...#{COLORS[:reset]}\n\n"
+
+    checks = [
+      { name: "Ruby Syntax", method: :check_ruby_syntax },
+      { name: "RuboCop", method: :check_rubocop },
+      { name: "Security (Brakeman)", method: :check_security },
+      { name: "Database Schema", method: :check_database_schema },
+      { name: "Tests", method: :check_tests },
+      { name: "Code Coverage", method: :check_coverage },
+      { name: "Documentation", method: :check_documentation },
+      { name: "TODO/FIXME Comments", method: :check_todos },
+      { name: "Large Files", method: :check_file_sizes },
+      { name: "Credentials/Secrets", method: :check_secrets },
+      { name: "ERB/HTML Syntax", method: :check_erb_syntax },
+      { name: "Asset Compilation", method: :check_assets },
+    ]
+
+    failed_checks = []
+    warnings = []
+
+    checks.each do |check|
+      print "Checking #{check[:name]}... "
+      result = send(check[:method])
+
+      case result
+      when true
+        puts "#{COLORS[:green]}✓#{COLORS[:reset]}"
+      when :warning
+        puts "#{COLORS[:yellow]}⚠#{COLORS[:reset]}"
+        warnings << check[:name]
+      else
+        puts "#{COLORS[:red]}✗#{COLORS[:reset]}"
+        failed_checks << check[:name]
+      end
+    end
+
+    # Show summary
+    puts "\n#{COLORS[:blue]}Summary:#{COLORS[:reset]}"
+    puts "  #{COLORS[:green]}✓ Passed: #{checks.length - failed_checks.length - warnings.length}#{COLORS[:reset]}"
+    puts "  #{COLORS[:yellow]}⚠ Warnings: #{warnings.length}#{COLORS[:reset]}" if warnings.any?
+    puts "  #{COLORS[:red]}✗ Failed: #{failed_checks.length}#{COLORS[:reset]}" if failed_checks.any?
+
+    if failed_checks.any?
+      puts "\n#{COLORS[:red]}Pre-commit checks failed:#{COLORS[:reset]}"
+      failed_checks.each { |check| puts "  - #{check}" }
+      puts "\n#{COLORS[:yellow]}Commit aborted. Please fix the issues and try again.#{COLORS[:reset]}"
+      puts "#{COLORS[:yellow]}To bypass: git commit --no-verify (NOT RECOMMENDED)#{COLORS[:reset]}"
+      exit 1
+    elsif warnings.any?
+      puts "\n#{COLORS[:yellow]}Warnings detected but commit allowed.#{COLORS[:reset]}"
+      puts "#{COLORS[:yellow]}Please review the warnings above.#{COLORS[:reset]}"
+      exit 0
+    else
+      puts "\n#{COLORS[:green]}All pre-commit checks passed! ✨#{COLORS[:reset]}"
+      exit 0
+    end
+  end
+
+  private
+
+  def staged_files
+    @staged_files ||= `git diff --cached --name-only --diff-filter=ACM`.split("\n")
+  end
+
+  def staged_ruby_files
+    @staged_ruby_files ||= staged_files.select { |f| f.end_with?('.rb') }
+  end
+
+  def staged_erb_files
+    @staged_erb_files ||= staged_files.select { |f| f.end_with?('.erb', '.html.erb') }
+  end
+
+  def check_ruby_syntax
+    return true if staged_ruby_files.empty?
+
+    staged_ruby_files.all? do |file|
+      _, stderr, status = Open3.capture3("ruby -c #{file}")
+      if !status.success?
+        puts "\n  #{COLORS[:red]}Syntax error in #{file}:#{COLORS[:reset]}"
+        puts "  #{stderr.strip}"
+        false
+      else
+        true
+      end
+    end
+  end
+
+  def check_rubocop
+    return true if staged_ruby_files.empty?
+
+    # Only check staged files
+    files_to_check = staged_ruby_files.join(' ')
+    stdout, _, status = Open3.capture3("bundle exec rubocop #{files_to_check}")
+
+    if !status.success?
+      puts "\n#{COLORS[:red]}RuboCop violations found:#{COLORS[:reset]}"
+      puts stdout
+      puts "\n#{COLORS[:yellow]}Tip: Run 'bundle exec rubocop -a' to auto-fix some issues#{COLORS[:reset]}"
+      false
+    else
+      true
+    end
+  end
+
+  def check_security
+    # Skip if no Ruby files changed
+    return true if staged_ruby_files.empty?
+
+    # Check if brakeman is available
+    _, _, status = Open3.capture3("which brakeman")
+    unless status.success?
+      puts "\n  #{COLORS[:yellow]}Brakeman not installed. Skipping security check.#{COLORS[:reset]}"
+      puts "  #{COLORS[:yellow]}Install with: gem install brakeman#{COLORS[:reset]}"
+      return :warning
+    end
+
+    stdout, _, status = Open3.capture3("brakeman -q --no-pager --no-exit-on-warn --no-exit-on-error -f json")
+
+    begin
+      result = JSON.parse(stdout)
+
+      # Check for high confidence warnings
+      high_warnings = result['warnings'].select { |w| w['confidence'] == 'High' }
+
+      if high_warnings.any?
+        puts "\n#{COLORS[:red]}Security vulnerabilities detected:#{COLORS[:reset]}"
+        high_warnings.each do |warning|
+          puts "  #{COLORS[:red]}• #{warning["warning_type"]}: #{warning["message"]}#{COLORS[:reset]}"
+          puts "    File: #{warning["file"]}:#{warning["line"]}"
+        end
+        false
+      else
+        true
+      end
+    rescue JSON::ParserError
+      puts "\n  #{COLORS[:yellow]}Could not parse Brakeman output#{COLORS[:reset]}"
+      :warning
+    end
+  end
+
+  def check_database_schema
+    # Check if schema.rb is being committed
+    schema_modified = staged_files.include?('db/schema.rb')
+
+    # Check if migration files are being committed
+    migrations_modified = staged_files.any? { |f| f.start_with?('db/migrate/') }
+
+    if migrations_modified && !schema_modified
+      puts "\n  #{COLORS[:yellow]}Warning: Migrations added but schema.rb not updated#{COLORS[:reset]}"
+      puts "  #{COLORS[:yellow]}Run: rails db:migrate#{COLORS[:reset]}"
+      return false
+    end
+
+    if schema_modified
+      # Check if schema.rb has conflicts
+      if File.exist?('db/schema.rb')
+        schema_content = File.read('db/schema.rb')
+        if schema_content.include?('<<<<<<< HEAD') || schema_content.include?('>>>>>>> ')
+          puts "\n  #{COLORS[:red]}Merge conflicts detected in schema.rb#{COLORS[:reset]}"
+          return false
+        end
+      end
+    end
+
+    true
+  end
+
+  def check_tests
+    # Only run tests if Ruby files were modified
+    return true if staged_ruby_files.empty?
+
+    # Check if any test files were modified
+    test_files_modified = staged_files.any? { |f| f.include?('test/') }
+
+    # Check if any app files were modified
+    app_files_modified = staged_files.any? { |f| f.start_with?('app/', 'lib/') }
+
+    # Skip if only non-code files were modified
+    return true unless test_files_modified || app_files_modified
+
+    # Run only tests for modified files if possible
+    test_files = if test_files_modified
+      staged_files.select { |f| f.include?('test/') && f.end_with?('_test.rb') }
+    else
+      # Find tests for modified app files
+      modified_app_files = staged_files.select { |f| f.start_with?('app/', 'lib/') }
+      find_test_files_for(modified_app_files)
+    end
+
+    if test_files.any?
+      puts "\n  Running tests for modified files..."
+      stdout, _, status = Open3.capture3("rails test #{test_files.join(" ")}")
+    else
+      puts "\n  Running all tests..."
+      stdout, _, status = Open3.capture3("rails test")
+    end
+
+    if !status.success?
+      puts "\n#{COLORS[:red]}Test failures detected:#{COLORS[:reset]}"
+      puts stdout.lines.grep(/Failure:|Error:|failures|errors/).join
+      puts "\n#{COLORS[:yellow]}Run 'rails test' to see full output#{COLORS[:reset]}"
+      false
+    else
+      true
+    end
+  end
+
+  def check_coverage
+    # Check if coverage report exists and is recent
+    coverage_file = 'coverage/.last_run.json'
+
+    return :warning unless File.exist?(coverage_file)
+
+    # Check if coverage data is recent (within last 5 minutes)
+    if File.mtime(coverage_file) < Time.now.utc - 300
+      puts "\n  #{COLORS[:yellow]}Coverage data is stale. Run tests to update.#{COLORS[:reset]}"
+      return :warning
+    end
+
+    begin
+      coverage_data = JSON.parse(File.read(coverage_file))
+      coverage_percent = coverage_data['result']['line'] || coverage_data['result']['covered_percent']
+
+      if coverage_percent < 90
+        puts "\n  #{COLORS[:yellow]}Code coverage is #{coverage_percent.round(2)}% (target: 90%)#{COLORS[:reset]}"
+        return :warning
+      end
+
+      true
+    rescue => e
+      puts "\n  #{COLORS[:yellow]}Could not read coverage data: #{e.message}#{COLORS[:reset]}"
+      :warning
+    end
+  end
+
+  def check_documentation
+    return true if staged_ruby_files.empty?
+
+    # Only check app files (not tests)
+    app_files = staged_ruby_files.select { |f| f.start_with?('app/') }
+    return true if app_files.empty?
+
+    missing_docs = []
+
+    app_files.each do |file|
+      content = File.read(file)
+
+      # Check for class documentation
+      classes_without_docs = content.scan(/^(class|module)\s+(\w+)/).reject do |type, name|
+        # Check if there's a comment in the 3 lines before the class/module
+        content.match?(/(?:^|\n)(?:\s*#.*\n){1,3}\s*#{type}\s+#{name}/)
+      end
+
+      classes_without_docs.each do |type, name|
+        missing_docs << "#{file}: Missing documentation for #{type} '#{name}'"
+      end
+
+      # Check for public method documentation in critical files
+      if file.include?('/models/') || file.include?('/services/')
+        public_methods = content.scan(/^\s*def\s+((?!self\.|private|protected)[^_]\w*)\s*\(?/)
+        public_methods.each do |method|
+          missing_docs << "#{file}: Missing documentation for method '#{method[0]}'" unless content.match?(/(?:^|\n)\s*#.*\n\s*def\s+#{Regexp.escape(method[0])}/)
+        end
+      end
+    end
+
+    if missing_docs.any?
+      puts "\n#{COLORS[:yellow]}Missing documentation:#{COLORS[:reset]}"
+      missing_docs.first(10).each { |doc| puts "  - #{doc}" }
+      puts "  ... and #{missing_docs.length - 10} more" if missing_docs.length > 10
+      # Make this a warning for now, change to false to enforce
+      :warning
+    else
+      true
+    end
+  end
+
+  def check_todos
+    todo_count = 0
+    fixme_count = 0
+
+    staged_files.each do |file|
+      next unless File.exist?(file) && File.file?(file)
+      next if file.include?('node_modules/') || file.include?('vendor/')
+      # Skip hook files and documentation where these words might be used legitimately
+      next if file.include?('.githooks/') || file.end_with?('.md')
+
+      begin
+        content = File.read(file)
+        file_todos = content.scan(/\b(TODO|FIXME|HACK|XXX|OPTIMIZE|BUG)[\s:]/i)
+
+        file_todos.each do |match|
+          case match[0].upcase
+          when 'TODO'
+            todo_count += 1
+          when 'FIXME', 'BUG'
+            fixme_count += 1
+          end
+        end
+      rescue
+        # Skip binary files or files that can't be read
+      end
+    end
+
+    if fixme_count.positive?
+      puts "\n  #{COLORS[:red]}Found #{fixme_count} FIXME/BUG comments that should be resolved#{COLORS[:reset]}"
+      false
+    elsif todo_count.positive?
+      puts "\n  #{COLORS[:yellow]}Found #{todo_count} TODO comments#{COLORS[:reset]}"
+      :warning
+    else
+      true
+    end
+  end
+
+  def check_file_sizes
+    large_files = []
+
+    staged_files.each do |file|
+      next unless File.exist?(file)
+
+      size = File.size(file)
+      if size > MAX_FILE_SIZE
+        size_mb = (size / 1024.0 / 1024.0).round(2)
+        large_files << "#{file} (#{size_mb}MB)"
+      end
+    end
+
+    if large_files.any?
+      puts "\n#{COLORS[:red]}Large files detected:#{COLORS[:reset]}"
+      large_files.each { |file| puts "  - #{file}" }
+      puts "\n#{COLORS[:yellow]}Consider using Git LFS for large files#{COLORS[:reset]}"
+      false
+    else
+      true
+    end
+  end
+
+  def check_secrets
+    potential_secrets = []
+
+    staged_files.each do |file|
+      next unless File.exist?(file) && File.file?(file)
+      next if file.include?('node_modules/') || file.include?('vendor/')
+      next if file.end_with?('.enc') # Skip encrypted files
+
+      begin
+        content = File.read(file)
+        line_number = 0
+
+        content.each_line do |line|
+          line_number += 1
+
+          SECRET_PATTERNS.each do |pattern|
+            if line.match?(pattern)
+              # Skip if it's likely a placeholder or example
+              next if line.match?(/["'](password|secret|key|token|your[-_]?api[-_]?key|xxx+|placeholder|example)["']/i)
+
+              potential_secrets << "#{file}:#{line_number} - #{line.strip[0..60]}..."
+            end
+          end
+        end
+      rescue
+        # Skip binary files
+      end
+    end
+
+    if potential_secrets.any?
+      puts "\n#{COLORS[:red]}Potential secrets/credentials detected:#{COLORS[:reset]}"
+      potential_secrets.first(5).each { |secret| puts "  - #{secret}" }
+      puts "  ... and #{potential_secrets.length - 5} more" if potential_secrets.length > 5
+      puts "\n#{COLORS[:yellow]}Use Rails credentials or environment variables instead#{COLORS[:reset]}"
+      false
+    else
+      true
+    end
+  end
+
+  def check_erb_syntax
+    return true if staged_erb_files.empty?
+
+    errors = []
+
+    staged_erb_files.each do |file|
+      # Basic ERB syntax check
+      begin
+        content = File.read(file)
+        # This is a simple check - you might want to use a proper ERB linter
+        errors << "#{file}: Mismatched ERB tags" if content.scan(/<%/).length != content.scan(/%>/).length
+      rescue => e
+        errors << "#{file}: #{e.message}"
+      end
+    end
+
+    if errors.any?
+      puts "\n#{COLORS[:red]}ERB syntax errors:#{COLORS[:reset]}"
+      errors.each { |error| puts "  - #{error}" }
+      false
+    else
+      true
+    end
+  end
+
+  def check_assets
+    # Check if any asset files were modified
+    asset_files_modified = staged_files.any? do |f|
+      f.start_with?('app/assets/', 'app/javascript/') ||
+      f == 'config/importmap.rb' ||
+      f.end_with?('.css', '.scss', '.js')
+    end
+
+    return true unless asset_files_modified
+
+    # Try to precompile assets (in test mode to avoid actually compiling)
+    _, stderr, status = Open3.capture3("RAILS_ENV=test rails assets:precompile --dry-run")
+
+    if !status.success?
+      puts "\n#{COLORS[:red]}Asset compilation would fail:#{COLORS[:reset]}"
+      puts stderr
+      false
+    else
+      true
+    end
+  end
+
+  def find_test_files_for(app_files)
+    test_files = []
+
+    app_files.each do |app_file|
+      # Convert app file path to test file path
+      test_file = app_file
+        .sub('app/', 'test/')
+        .sub('lib/', 'test/lib/')
+        .sub('.rb', '_test.rb')
+
+      test_files << test_file if File.exist?(test_file)
+    end
+
+    test_files
+  end
+end
+
+# Run the checks
+PreCommitCheck.run

@@ -111,7 +111,9 @@ class ServiceTest < ActiveSupport::TestCase
 
     assert_equal 100, @service.mrr
     assert_equal 1200, @service.arr
-    assert_equal 1700, @service.tcv # 500 NRC + (100 * 12 months)
+    # With 3% annual escalator and 12-month term, no escalation in first year
+    # TCV = (12 * $100) + $500 NRC = $1,700
+    assert_equal 1700, @service.tcv
   end
 
   test "should calculate MRR with escalation" do
@@ -131,14 +133,18 @@ class ServiceTest < ActiveSupport::TestCase
       status: "active"
     )
 
+    # Get monthly breakdown to verify escalation
+    monthly_breakdown = service.monthly_revenue_breakdown
+
     # Month 1: $100
-    assert_equal 100, service.calculate_mrr_at_month(1)
+    assert_equal 100, monthly_breakdown[0][:mrr]
 
-    # Month 13: $100 * 1.10 = $110
-    assert_equal 110, service.calculate_mrr_at_month(13)
+    # The RevenueCalculator uses annual escalation (not monthly compounding)
+    # Month 13: $100 * 1.10 = $110.00
+    assert_in_delta(110.00, monthly_breakdown[12][:mrr])
 
-    # Month 25: $100 * 1.10^2 = $121
-    assert_equal 121, service.calculate_mrr_at_month(25)
+    # Month 25: $100 * 1.10 * 1.10 = $121.00
+    assert_in_delta(121.00, monthly_breakdown[24][:mrr])
   end
 
   test "should have active scope" do
@@ -350,28 +356,47 @@ class ServiceTest < ActiveSupport::TestCase
   end
 
   test "should calculate MRR for last month of term" do
-    assert_equal 100, @service.calculate_mrr_at_month(12)
+    @service.save!
+    monthly_breakdown = @service.monthly_revenue_breakdown
+
+    # With 3% annual escalator and 12-month term, no escalation in first year
+    # Month 12: $100 (no escalation yet)
+    assert_in_delta(100.00, monthly_breakdown.last[:mrr])
   end
 
-  test "should return zero MRR for months beyond term" do
-    assert_equal 0, @service.calculate_mrr_at_month(13)
+  test "should not include months beyond term in breakdown" do
+    @service.save!
+    monthly_breakdown = @service.monthly_revenue_breakdown
+
+    # Should only have 12 months in the breakdown
+    assert_equal 12, monthly_breakdown.length
   end
 
-  test "should return zero MRR for invalid month numbers" do
-    assert_equal 0, @service.calculate_mrr_at_month(0)
-    assert_equal 0, @service.calculate_mrr_at_month(-1)
+  test "should handle monthly breakdown with valid dates" do
+    @service.save!
+    monthly_breakdown = @service.monthly_revenue_breakdown
+
+    # Should have valid months
+    assert_not_empty monthly_breakdown
+    assert monthly_breakdown.all? { |month| (month[:mrr]).positive? }
   end
 
-  test "should handle zero term_months for calculate_total_tcv" do
+  test "should handle zero term_months for calculate_tcv" do
     @service.term_months = 0
 
-    assert_equal 500, @service.calculate_total_tcv # Only NRCs
+    # With zero term_months, validation will fail
+    assert_not @service.valid?
+    assert_includes @service.errors[:term_months], "must be greater than 0"
+
+    # The RevenueCalculator returns 0 for invalid services
+    assert_equal 0, @service.calculate_tcv
   end
 
-  test "should handle zero term_months for calculate_average_mrr" do
+  test "should handle zero term_months for calculate_gaap_mrr" do
     @service.term_months = 0
+    @service.save
 
-    assert_equal 0, @service.calculate_average_mrr
+    assert_equal 0, @service.calculate_gaap_mrr
   end
 
   test "should not calculate end dates when already provided" do
@@ -459,5 +484,191 @@ class ServiceTest < ActiveSupport::TestCase
 
       assert_predicate @service, :valid?, "Service should be valid with status: #{status}"
     end
+  end
+
+  test "should require billing_start_date" do
+    @service.billing_start_date = nil
+
+    assert_not @service.valid?
+    assert_includes @service.errors[:billing_start_date], "can't be blank"
+  end
+
+  test "should require rev_rec_start_date" do
+    @service.rev_rec_start_date = nil
+
+    assert_not @service.valid?
+    assert_includes @service.errors[:rev_rec_start_date], "can't be blank"
+  end
+
+  test "should require units to be positive" do
+    @service.units = 0
+
+    assert_not @service.valid?
+    assert_includes @service.errors[:units], "must be greater than 0"
+  end
+
+  test "should not allow negative units" do
+    @service.units = -1
+
+    assert_not @service.valid?
+    assert_includes @service.errors[:units], "must be greater than 0"
+  end
+
+  test "should not allow negative unit_price" do
+    @service.unit_price = -1
+
+    assert_not @service.valid?
+    assert_includes @service.errors[:unit_price], "must be greater than or equal to 0"
+  end
+
+  test "should not allow negative nrcs" do
+    @service.nrcs = -100
+
+    assert_not @service.valid?
+    assert_includes @service.errors[:nrcs], "must be greater than or equal to 0"
+  end
+
+  test "should not allow negative annual_escalator" do
+    @service.annual_escalator = -1
+
+    assert_not @service.valid?
+    assert_includes @service.errors[:annual_escalator], "must be greater than or equal to 0"
+  end
+
+  test "should require integer term_months" do
+    @service.term_months = 12.5
+
+    assert_not @service.valid?
+    assert_includes @service.errors[:term_months], "must be an integer"
+  end
+
+  test "should have association to customer through order" do
+    assert_equal @customer, @service.customer
+  end
+
+  test "should calculate revenue fields when MRR is already set" do
+    @service.mrr = 200
+    @service.save!
+
+    # MRR should stay as user-entered value
+    assert_equal 200, @service.mrr
+    assert_equal 2400, @service.arr
+  end
+
+  test "should validate all edge cases for date validations" do
+    # Test skipping validation when dates are nil
+    service = Service.new(
+      order: @order,
+      service_name: "Test",
+      service_type: "internet",
+      term_months: 12,
+      units: 1,
+      unit_price: 100,
+      nrcs: 0,
+      annual_escalator: 0,
+      status: "active"
+    )
+
+    # Missing dates - should have validation errors for required dates
+    assert_not service.valid?
+    assert_includes service.errors[:billing_start_date], "can't be blank"
+    assert_includes service.errors[:rev_rec_start_date], "can't be blank"
+  end
+
+  test "should handle calculate_end_dates_from_term when dates missing" do
+    service = Service.new(
+      order: @order,
+      service_name: "Test",
+      service_type: "internet",
+      term_months: 12,
+      units: 1,
+      unit_price: 100,
+      nrcs: 0,
+      annual_escalator: 0,
+      status: "active"
+    )
+
+    # Without start dates, end dates should not be calculated
+    service.valid?
+
+    assert_nil service.billing_end_date
+    assert_nil service.rev_rec_end_date
+  end
+
+  test "should handle validation edge case with billing date mismatch" do
+    # Test with date variation outside acceptable range
+    @service.billing_end_date = @service.billing_start_date + @service.term_months.months + 2.days
+
+    assert_not @service.valid?
+    assert_includes @service.errors[:term_months], "doesn't match the billing date range"
+  end
+
+  test "should calculate all revenues using calculate_all_revenues method" do
+    @service.save!
+
+    revenues = @service.calculate_all_revenues
+
+    assert_kind_of Hash, revenues
+  end
+
+  test "calculate_all_revenues returns all required keys" do
+    @service.save!
+
+    revenues = @service.calculate_all_revenues
+
+    assert revenues.key?(:tcv)
+    assert revenues.key?(:mrr)
+    assert revenues.key?(:arr)
+  end
+
+  test "calculate_all_revenues includes gaap_mrr and monthly_values" do
+    @service.save!
+
+    revenues = @service.calculate_all_revenues
+
+    assert revenues.key?(:gaap_mrr)
+    assert revenues.key?(:monthly_values)
+  end
+
+  test "calculate_all_revenues returns correct values" do
+    @service.save!
+
+    revenues = @service.calculate_all_revenues
+
+    assert_equal 100, revenues[:mrr]
+    assert_equal 1200, revenues[:arr]
+    assert_equal 1700, revenues[:tcv]
+  end
+
+  test "should calculate net new value using calculate_net_new_value method" do
+    @service.save!
+
+    # Test with no original service (new service)
+    net_new = @service.calculate_net_new_value(nil)
+
+    assert_equal @service.tcv, net_new
+
+    # Create an original service to compare
+    original = Service.create!(
+      order: @order,
+      service_name: "Original Service",
+      service_type: "internet",
+      term_months: 12,
+      billing_start_date: Date.current - 1.year,
+      billing_end_date: Date.current - 1.day,
+      rev_rec_start_date: Date.current - 1.year,
+      rev_rec_end_date: Date.current - 1.day,
+      units: 1,
+      unit_price: 80,
+      nrcs: 0,
+      annual_escalator: 0,
+      status: "active"
+    )
+
+    # Calculate net new value (upgrade)
+    net_new_upgrade = @service.calculate_net_new_value(original)
+    expected_net_new = @service.tcv - original.tcv
+
+    assert_equal expected_net_new, net_new_upgrade
   end
 end

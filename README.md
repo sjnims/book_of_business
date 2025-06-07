@@ -30,6 +30,10 @@ rails db:create
 rails db:migrate
 rails db:seed
 
+# Install git hooks for code quality checks
+rails hooks:install
+# or: bin/setup-hooks
+
 # Run tests
 rails test
 
@@ -58,6 +62,62 @@ Built with Rails 8's modern stack:
 ## Development
 
 See [ROADMAP.md](ROADMAP.md) for planned features and development phases.
+
+### Code Quality
+
+This project uses comprehensive automated pre-commit hooks to maintain enterprise-grade code quality:
+
+#### Pre-commit Checks (Blocking)
+
+* **Ruby Syntax Check** - Ensures all Ruby files are syntactically valid
+* **RuboCop** - Enforces Ruby style guide and best practices
+* **Security (Brakeman)** - Scans for security vulnerabilities
+* **Database Schema** - Ensures migrations and schema.rb are in sync
+* **Tests** - Runs relevant tests for modified files
+* **FIXME/BUG Comments** - Blocks commits with unresolved issues
+* **Large Files** - Prevents accidental commits of files >5MB
+* **Credentials/Secrets** - Scans for hardcoded secrets
+
+#### Pre-commit Warnings (Non-blocking)
+
+* **Code Coverage** - Warns if coverage drops below 90%
+* **Documentation** - Warns about missing class/method documentation
+* **TODO Comments** - Tracks technical debt
+* **ERB/HTML Syntax** - Basic template validation
+* **Asset Compilation** - Verifies assets will compile
+
+#### Pre-push Checks (Final Quality Gate)
+
+The pre-push hook runs comprehensive checks on the entire codebase:
+
+**Blocking Checks:**
+
+* Full Ruby syntax validation across all files
+* Complete RuboCop compliance check
+* High-confidence security vulnerabilities (Brakeman)
+* Full test suite execution
+* Code coverage threshold (90% minimum)
+* Database migration status
+* Protected branch enforcement
+
+**Warning Checks:**
+
+* Code complexity metrics
+* Medium-confidence security issues
+* Dependency vulnerabilities
+* Documentation coverage
+* Conventional commit messages
+* File permissions
+* Outdated dependencies
+
+To bypass hooks in an emergency: `git commit --no-verify` or `git push --no-verify` (NOT RECOMMENDED)
+
+To run checks manually:
+
+* Pre-commit: `rails hooks:check`
+* Pre-push: `ruby .githooks/pre-push`
+
+For optimal performance, pre-commit hooks run targeted tests while pre-push runs the full suite.
 
 ## License
 

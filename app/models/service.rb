@@ -92,55 +92,46 @@ class Service < ApplicationRecord
     units * unit_price
   end
 
-  # Calculates the Monthly Recurring Revenue for a specific month in the contract term
-  # accounting for annual escalation rates
+  # Returns the revenue calculator instance for this service
   #
-  # Returns 0 if the month_number is invalid (outside the contract term)
-  # Returns the escalated MRR value for the specified month
-  def calculate_mrr_at_month(month_number)
-    return 0 unless month_number.positive? && month_number <= term_months
-
-    base_mrr = monthly_recurring_charge
-    years_passed = (month_number - 1) / 12
-    escalation_factor = (1 + annual_escalator / 100.0) ** years_passed
-
-    base_mrr * escalation_factor
+  # Returns RevenueCalculator instance
+  def revenue_calculator
+    @revenue_calculator ||= RevenueCalculator.new(self)
   end
 
-  # Calculates the Total Contract Value including non-recurring charges and
-  # all monthly recurring revenue with escalations over the contract term
+  # Calculates all revenue metrics using the RevenueCalculator
   #
-  # Returns only NRCs if term_months is zero
-  # Returns the sum of NRCs plus all monthly charges with escalations applied
-  def calculate_total_tcv
-    return nrcs if term_months.zero?
-
-    total = nrcs
-
-    (1..term_months).each do |month|
-      total += calculate_mrr_at_month(month)
-    end
-
-    total
+  # Returns Hash with :tcv, :mrr, :arr, :gaap_mrr, :monthly_values
+  def calculate_all_revenues
+    revenue_calculator.calculate_all
   end
 
-  # Calculates the average Monthly Recurring Revenue over the contract term
-  # taking into account annual escalations
+  # Calculates the Total Contract Value using the RevenueCalculator
   #
-  # Returns 0 if term_months is zero
-  # Returns the average MRR across all months including escalations
-  def calculate_average_mrr
-    return 0 if term_months.zero?
-
-    total_mrr = (1..term_months).sum { |month| calculate_mrr_at_month(month) }
-    total_mrr / term_months
+  # Returns Float representing total contract value including NRCs and escalations
+  def calculate_tcv
+    revenue_calculator.calculate_tcv
   end
 
-  # Calculates the Annual Recurring Revenue based on average MRR
+  # Calculates the GAAP Monthly Recurring Revenue
   #
-  # Returns the average MRR multiplied by 12 months
-  def calculate_arr
-    calculate_average_mrr * 12
+  # Returns Float representing (TCV - NRCs) / term_months
+  def calculate_gaap_mrr
+    revenue_calculator.calculate_gaap_mrr
+  end
+
+  # Calculates net new value compared to an original service (for renewals/upgrades)
+  #
+  # Returns Float representing the difference in TCV
+  def calculate_net_new_value(original_service = nil)
+    revenue_calculator.calculate_net_new_value(original_service)
+  end
+
+  # Gets the monthly revenue breakdown with escalations
+  #
+  # Returns Array of hashes with monthly revenue details
+  def monthly_revenue_breakdown
+    revenue_calculator.calculate_monthly_breakdown
   end
 
   private
@@ -151,16 +142,19 @@ class Service < ApplicationRecord
 
     # Validate revenue recognition dates
     return unless rev_rec_start_date && rev_rec_end_date && rev_rec_end_date <= rev_rec_start_date
-      errors.add(:rev_rec_end_date, "must be after revenue recognition start date")
+
+    errors.add(:rev_rec_end_date, "must be after revenue recognition start date")
   end
 
   def term_matches_billing_dates
     return unless billing_start_date && billing_end_date && term_months
 
-    calculated_months = ((billing_end_date.year * 12 + billing_end_date.month) -
-                        (billing_start_date.year * 12 + billing_start_date.month))
+    # Calculate the expected end date based on term_months
+    expected_end_date = billing_start_date + term_months.months - 1.day
 
-    return unless calculated_months != term_months
+    # Allow for minor date variations (e.g., month-end differences)
+    return if billing_end_date >= expected_end_date - 1.day && billing_end_date <= expected_end_date + 1.day
+
     errors.add(:term_months, "doesn't match the billing date range")
   end
 
@@ -170,12 +164,18 @@ class Service < ApplicationRecord
 
     # Calculate rev rec end date if not provided
     return unless rev_rec_start_date.present? && term_months.present? && rev_rec_end_date.blank?
-      self.rev_rec_end_date = rev_rec_start_date + term_months.months - 1.day
+
+    self.rev_rec_end_date = rev_rec_start_date + term_months.months - 1.day
   end
 
   def calculate_revenue_fields
-    self.mrr = calculate_average_mrr
-    self.arr = calculate_arr
-    self.tcv = calculate_total_tcv
+    # Set base MRR from monthly recurring charge if not already set
+    self.mrr ||= monthly_recurring_charge
+
+    # Use revenue calculator for complex calculations
+    calculations = revenue_calculator.calculate_all
+    self.tcv = calculations[:tcv]
+    self.arr = calculations[:arr]
+    # Note: We keep the user-entered MRR, but could use GAAP MRR if needed
   end
 end
