@@ -59,49 +59,6 @@ jobs:
             !vendor/**
             !tmp/**
             !coverage/**
-          config: |
-            {
-              "version": "0.2",
-              "language": "en",
-              "ignorePaths": [
-                "vendor/**",
-                "tmp/**",
-                "coverage/**",
-                "*.lock",
-                "*.log"
-              ],
-              "words": [
-                "bbnb",
-                "gaap",
-                "mrr",
-                "arr",
-                "tcv",
-                "nrcs",
-                "codeql",
-                "codecov",
-                "brakeman",
-                "rubocop",
-                "minitest",
-                "hotwire",
-                "turbo",
-                "stimulus",
-                "propshaft",
-                "importmap",
-                "actioncable",
-                "actionmailer",
-                "actionpack",
-                "actionview",
-                "activejob",
-                "activemodel",
-                "activerecord",
-                "activestorage",
-                "activesupport",
-                "sjnims",
-                "anthropic"
-              ],
-              "ignoreWords": [],
-              "import": []
-            }
 
   # Summary status
   docs-status:
