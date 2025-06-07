@@ -34,13 +34,6 @@ jobs:
             !vendor/**/*.md
             !tmp/**/*.md
             !coverage/**/*.md
-          config: |
-            {
-              "default": true,
-              "MD013": false,
-              "MD033": false,
-              "MD041": false
-            }
 
       - name: Check for broken links
         uses: lycheeverse/lychee-action@v2

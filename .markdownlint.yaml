@@ -1,0 +1,17 @@
+# Markdown linting rules for the project
+# See https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+# Enable all rules by default
+default: true
+
+# MD013/line-length - Line length
+# Disabled because we don't want to enforce line length in documentation
+MD013: false
+
+# MD033/no-inline-html - Inline HTML
+# Disabled because we use HTML for badges and special formatting
+MD033: false
+
+# MD041/first-line-heading - First line in file should be a top level heading
+# Disabled because some files may start with badges or metadata
+MD041: false
