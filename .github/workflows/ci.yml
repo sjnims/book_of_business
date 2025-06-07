@@ -247,6 +247,8 @@ jobs:
         if: matrix.ruby-version == '3.4.4'  # Only upload coverage once
         run: |
           echo "Coverage report generated at coverage/index.html"
+          ls -la coverage/ || echo "Coverage directory not found"
+          cat coverage/coverage.xml | head -50 || echo "Coverage XML not found"
 
       - name: Upload coverage to Codecov
         if: matrix.ruby-version == '3.4.4'
@@ -258,6 +260,7 @@ jobs:
           name: book-of-business
           fail_ci_if_error: false
           verbose: true
+          root_dir: ${{ github.workspace }}
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}

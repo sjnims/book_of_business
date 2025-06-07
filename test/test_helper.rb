@@ -5,14 +5,28 @@ require "simplecov"
 require "simplecov-cobertura"
 
 SimpleCov.start "rails" do
+  root File.expand_path("..", __dir__)
+  
   add_filter "/test/"
   add_filter "/config/"
   add_filter "/vendor/"
+  add_filter "/db/"
+  add_filter "/bin/"
+  
+  # Ensure proper source file detection
+  track_files "{app,lib}/**/*.rb"
 
   formatter SimpleCov::Formatter::MultiFormatter.new([
     SimpleCov::Formatter::HTMLFormatter,
     SimpleCov::Formatter::CoberturaFormatter,
   ])
+  
+  # Add metadata for Codecov
+  add_group "Models", "app/models"
+  add_group "Controllers", "app/controllers"
+  add_group "Services", "app/services"
+  add_group "Helpers", "app/helpers"
+  add_group "Libraries", "lib"
 end
 
 require_relative "../config/environment"
