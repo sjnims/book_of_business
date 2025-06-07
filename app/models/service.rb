@@ -27,12 +27,14 @@ class Service < ApplicationRecord
   validates :term_months, numericality: { greater_than: 0, only_integer: true }
   validates :billing_start_date, presence: true
   validates :rev_rec_start_date, presence: true
-  validates :units, numericality: { greater_than: 0 }
+  validates :units, numericality: true
   validates :unit_price, numericality: { greater_than_or_equal_to: 0 }
-  validates :nrcs, numericality: { greater_than_or_equal_to: 0 }
+  validates :nrcs, numericality: true
   validates :annual_escalator, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validate :end_dates_after_start_dates
   validate :term_matches_billing_dates
+  validate :units_sign_validation
+  validate :de_book_quantities_validation
 
   # Scopes
   scope :active, -> { where(status: "active") }
@@ -40,6 +42,7 @@ class Service < ApplicationRecord
   scope :by_type, ->(type) { where(service_type: type) }
   scope :expiring_soon, -> { active.where(billing_end_date: Date.current..30.days.from_now) }
   scope :expired, -> { where("billing_end_date < ?", Date.current) }
+  scope :needs_extension, -> { active.where("billing_end_date < ?", Date.current) }
 
   # Callbacks
   before_validation :calculate_end_dates_from_term
@@ -69,6 +72,75 @@ class Service < ApplicationRecord
   # Returns true if billing_end_date is before current date, false otherwise
   def expired?
     billing_end_date < Date.current
+  end
+
+  # Status transition methods
+
+  # Activates a pending installation service
+  #
+  # Returns true if transition successful, false otherwise
+  def activate!
+    return false unless can_activate?
+
+    update(status: "active")
+  end
+
+  # Cancels a service
+  #
+  # Returns true if transition successful, false otherwise
+  def cancel!
+    return false unless can_cancel?
+
+    update(status: "canceled")
+  end
+
+  # Marks a service as renewed (typically when a renewal order is created)
+  #
+  # Returns true if transition successful, false otherwise
+  def renew!
+    return false unless can_renew?
+
+    update(status: "renewed")
+  end
+
+  # Updates service to extended status if past contract end date
+  # This should be called by background jobs, not manually
+  #
+  # Returns true if status was updated, false otherwise
+  def update_extended_status!
+    return false unless should_be_extended?
+
+    update(status: "extended")
+  end
+
+  # Status transition checks
+
+  # Checks if the service can be activated
+  #
+  # Returns true if status is pending_installation, false otherwise
+  def can_activate?
+    status == "pending_installation"
+  end
+
+  # Checks if the service can be canceled
+  #
+  # Returns true if status is pending_installation or active, false otherwise
+  def can_cancel?
+    [ "pending_installation", "active" ].include?(status)
+  end
+
+  # Checks if the service can be renewed
+  #
+  # Returns true if status is active or extended, false otherwise
+  def can_renew?
+    [ "active", "extended" ].include?(status)
+  end
+
+  # Checks if the service should be automatically marked as extended
+  #
+  # Returns true if status is active and past billing end date
+  def should_be_extended?
+    status == "active" && billing_end_date < Date.current
   end
 
   # Checks if the service is active and expiring within 30 days
@@ -156,6 +228,55 @@ class Service < ApplicationRecord
     return if billing_end_date >= expected_end_date - 1.day && billing_end_date <= expected_end_date + 1.day
 
     errors.add(:term_months, "doesn't match the billing date range")
+  end
+
+  def units_sign_validation
+    return unless units.present? || nrcs.present?
+
+    if order&.is_de_book?
+      # De-book order services should have negative values
+      errors.add(:units, "must be negative for de-book orders") if units.present? && units.positive?
+      errors.add(:nrcs, "must be negative for de-book orders") if nrcs.present? && nrcs.positive?
+    else
+      # All other order services should have positive units
+      errors.add(:units, "must be greater than 0") if units.present? && units <= 0
+      errors.add(:nrcs, "must be greater than or equal to 0") if nrcs.present? && nrcs.negative?
+    end
+  end
+
+  def de_book_quantities_validation
+    return unless order&.is_de_book? && order.original_order.present?
+
+    # For de-book orders, validate that we're not de-booking more than what's pending
+    original_order = order.original_order
+
+    # Group services by type to check quantities
+    original_pending_services = original_order.services
+      .where(status: "pending_installation")
+      .group_by(&:service_type)
+
+    # Check if this service type exists in pending state
+    if service_type.present? && !original_pending_services[service_type]
+      errors.add(:service_type, "does not exist in pending state on the original order")
+      return
+    end
+
+    # Calculate total pending units for this service type
+    return unless service_type.present? && units.present?
+      pending_units = original_pending_services[service_type]&.sum(&:units) || 0
+
+      # Sum up any other de-book orders against this original order
+      existing_de_booked_units = original_order.renewal_orders
+        .where(order_type: "de_book")
+        .where.not(id: order.id)
+        .joins(:services)
+        .where(services: { service_type: service_type })
+        .sum("ABS(services.units)")
+
+      available_units = pending_units - existing_de_booked_units
+
+      return unless units.abs > available_units
+        errors.add(:units, "cannot exceed available pending units (#{available_units.to_i} remaining)")
   end
 
   def calculate_end_dates_from_term

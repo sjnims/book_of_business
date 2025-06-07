@@ -200,22 +200,29 @@ order_data = [
 order_data.each do |data|
   customer = Customer.find_by!(customer_id: data[:customer_id])
 
-  order = Order.create!(
-    customer: customer,
-    order_number: data[:order_number],
-    sold_date: data[:sold_date],
-    order_type: data[:order_type],
-    sales_rep: data[:sales_rep],
-    site: data[:site],
-    notes: "Seeded test order"
-  )
+  # Check if order already exists
+  order = Order.find_or_initialize_by(order_number: data[:order_number])
 
-  data[:services].each do |service_data|
-    service = order.services.create!(service_data)
-    puts "  Created service: #{service.display_name} for order #{order.order_number}"
+  if order.persisted?
+    puts "Order already exists: #{order.order_number}"
+  else
+    order.assign_attributes(
+      customer: customer,
+      sold_date: data[:sold_date],
+      order_type: data[:order_type],
+      sales_rep: data[:sales_rep],
+      site: data[:site],
+      notes: "Seeded test order"
+    )
+    order.save!
+
+    data[:services].each do |service_data|
+      service = order.services.create!(service_data)
+      puts "  Created service: #{service.display_name} for order #{order.order_number}"
+    end
+
+    puts "Created order: #{order.display_name} with #{order.services.count} services"
   end
-
-  puts "Created order: #{order.display_name} with #{order.services.count} services"
 end
 
 # Create a renewal order

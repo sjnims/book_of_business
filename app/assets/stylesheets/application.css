@@ -181,8 +181,251 @@ body {
   border: 1px solid #f5c6cb;
 }
 
+/* Container and Layout */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+.card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Tables */
+.table-container {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.data-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #555;
+}
+
+.data-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Buttons */
+.button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: background-color 0.3s;
+  background-color: #6c757d;
+  color: white;
+}
+
+.button:hover {
+  background-color: #5a6268;
+}
+
+.button-primary {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.button-primary:hover {
+  background-color: #45a049;
+}
+
+.button-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.button-danger:hover {
+  background-color: #c82333;
+}
+
+.button-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.empty-state p {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+/* Detail Lists */
+.details-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.5rem 1rem;
+}
+
+.details-list dt {
+  font-weight: 600;
+  color: #555;
+}
+
+.details-list dd {
+  color: #333;
+}
+
+.details-list .highlight {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #4CAF50;
+}
+
+/* Grid Layout */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.col {
+  min-width: 0;
+}
+
+/* Text Alignment */
+.text-right {
+  text-align: right;
+}
+
+.text-muted {
+  color: #6c757d;
+}
+
+.text-negative {
+  color: #dc3545;
+}
+
+/* Table Actions */
+.actions {
+  white-space: nowrap;
+}
+
+.actions .button {
+  margin-right: 0.25rem;
+}
+
+/* Status Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: capitalize;
+}
+
+.badge-pending_installation {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.badge-active {
+  background-color: #28a745;
+  color: white;
+}
+
+.badge-extended {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.badge-renewed {
+  background-color: #6c757d;
+  color: white;
+}
+
+.badge-canceled {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Status Actions */
+.status-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.status-actions form {
+  margin: 0;
+}
+
+.button-info {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.button-info:hover {
+  background-color: #138496;
+}
+
+.button-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.button-success:hover {
+  background-color: #218838;
+}
+
 /* Utility Classes */
 h1 {
   margin-bottom: 1.5rem;
   color: #2c3e50;
+}
+
+h2 {
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+h3 {
+  margin-bottom: 1rem;
+  color: #555;
 }

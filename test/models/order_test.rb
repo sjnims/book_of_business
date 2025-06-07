@@ -133,7 +133,8 @@ class OrderTest < ActiveSupport::TestCase
       customer: @customer,
       order_number: "ORD002",
       sold_date: Date.current,
-      order_type: "renewal"
+      order_type: "renewal",
+      original_order: @order
     )
 
     assert_includes Order.renewals, renewal
@@ -304,7 +305,8 @@ class OrderTest < ActiveSupport::TestCase
       customer: @customer,
       order_number: "ORD006",
       sold_date: Date.current,
-      order_type: "renewal"
+      order_type: "renewal",
+      original_order: @order
     )
 
     upgrade = Order.create!(
@@ -328,7 +330,8 @@ class OrderTest < ActiveSupport::TestCase
       customer: @customer,
       order_number: "ORD006",
       sold_date: Date.current,
-      order_type: "renewal"
+      order_type: "renewal",
+      original_order: @order
     )
 
     renewals = Order.by_type("renewal")
@@ -512,7 +515,8 @@ class OrderTest < ActiveSupport::TestCase
   end
 
   test "should support all order types" do
-    order_types = %w[new_order renewal upgrade downgrade cancellation]
+    # Test non-renewal order types
+    order_types = %w[new_order upgrade downgrade cancellation]
 
     order_types.each do |type|
       order = Order.new(
@@ -524,6 +528,18 @@ class OrderTest < ActiveSupport::TestCase
 
       assert_predicate order, :valid?, "Order should be valid with type: #{type}"
     end
+
+    # Test renewal separately since it requires original_order
+    @order.save!
+    renewal = Order.new(
+      customer: @customer,
+      order_number: "ORD-renewal",
+      sold_date: Date.current,
+      order_type: "renewal",
+      original_order: @order
+    )
+
+    assert_predicate renewal, :valid?, "Renewal order should be valid with original_order"
   end
 
   test "should limit recent scope to 10 orders" do

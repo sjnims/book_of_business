@@ -12,21 +12,25 @@ class Order < ApplicationRecord
 
   # Associations
   belongs_to :customer
+  belongs_to :created_by, class_name: "User", optional: true
   belongs_to :original_order, class_name: "Order", optional: true
   has_many :renewal_orders, class_name: "Order", foreign_key: "original_order_id",
            dependent: :restrict_with_error, inverse_of: :original_order
   has_many :services, dependent: :destroy
 
   # Order types
-  ORDER_TYPES = %w[new_order renewal upgrade downgrade cancellation].freeze
+  ORDER_TYPES = %w[new_order renewal upgrade downgrade cancellation de_book].freeze
 
   # Validations
   validates :order_number, presence: true, uniqueness: { case_sensitive: false }
   validates :sold_date, presence: true
   validates :order_type, inclusion: { in: ORDER_TYPES }
-  validates :tcv, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :baseline_mrr, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :gaap_mrr, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :tcv, numericality: true, allow_nil: true
+  validates :baseline_mrr, numericality: true, allow_nil: true
+  validates :gaap_mrr, numericality: true, allow_nil: true
+  validate :de_book_requires_original_order
+  validate :renewal_requires_original_order
+  validate :financial_values_sign_validation
 
   # Scopes
   scope :by_date, -> { order(sold_date: :desc) }
@@ -69,6 +73,13 @@ class Order < ApplicationRecord
     order_type == "new_order"
   end
 
+  # Checks if this order is a de-book order
+  #
+  # Returns true if order_type is "de_book", false otherwise
+  def is_de_book?
+    order_type == "de_book"
+  end
+
   # Checks if the order has any active services
   #
   # Returns true if at least one active service exists, false otherwise
@@ -81,6 +92,39 @@ class Order < ApplicationRecord
   # Returns ActiveRecord::Relation of active services
   def active_services
     services.where(status: "active")
+  end
+
+  # Returns pending installation services that can be de-booked
+  #
+  # Returns ActiveRecord::Relation of pending services
+  def pending_services
+    services.where(status: "pending_installation")
+  end
+
+  # Calculates available units for de-booking by service type
+  #
+  # Returns a hash with service types as keys and available units as values
+  def available_for_de_book
+    return {} unless pending_services.any?
+
+    # Get pending units by service type
+    pending_by_type = pending_services.group(:service_type).sum(:units)
+
+    # Subtract already de-booked units
+    de_booked_by_type = renewal_orders
+      .where(order_type: "de_book")
+      .joins(:services)
+      .group("services.service_type")
+      .sum("ABS(services.units)")
+
+    # Calculate available units
+    result = {}
+    pending_by_type.each do |type, units|
+      de_booked = de_booked_by_type[type] || 0
+      available = units - de_booked
+      result[type] = available if available.positive?
+    end
+    result
   end
 
   # Calculates total Monthly Recurring Revenue across all services
@@ -140,5 +184,38 @@ class Order < ApplicationRecord
     self.tcv = calculate_tcv
     self.baseline_mrr = calculate_mrr
     self.gaap_mrr = calculate_gaap_mrr
+  end
+
+  # Validates that de-book orders must reference an original order
+  def de_book_requires_original_order
+    return unless is_de_book?
+
+    return unless original_order_id.blank?
+      errors.add(:original_order_id, "is required for de-book orders")
+  end
+
+  # Validates that renewal orders must reference an original order
+  def renewal_requires_original_order
+    return unless is_renewal?
+
+    return unless original_order_id.blank?
+      errors.add(:original_order_id, "is required for renewal orders")
+  end
+
+  # Validates financial values have correct sign based on order type
+  def financial_values_sign_validation
+    return unless tcv.present? || baseline_mrr.present? || gaap_mrr.present?
+
+    if is_de_book?
+      # De-book orders should have negative values
+      errors.add(:tcv, "must be negative for de-book orders") if tcv.present? && tcv.positive?
+      errors.add(:baseline_mrr, "must be negative for de-book orders") if baseline_mrr.present? && baseline_mrr.positive?
+      errors.add(:gaap_mrr, "must be negative for de-book orders") if gaap_mrr.present? && gaap_mrr.positive?
+    else
+      # All other orders should have non-negative values
+      errors.add(:tcv, "must be greater than or equal to 0") if tcv.present? && tcv.negative?
+      errors.add(:baseline_mrr, "must be greater than or equal to 0") if baseline_mrr.present? && baseline_mrr.negative?
+      errors.add(:gaap_mrr, "must be greater than or equal to 0") if gaap_mrr.present? && gaap_mrr.negative?
+    end
   end
 end

@@ -55,25 +55,39 @@ Transform the current Excel-based contract tracking system into a robust, multi-
 
 > **Reference Implementation**: See `tmp/monthly_billing_calculation.rb` for a working example of the monthly invoice calculation logic to be implemented in tasks 2.1.7-2.1.8.
 
-#### 2.2: Order & Service Management
+#### 2.2: Order & Service Management ✅
 
-- [ ] 2.2.1 Implement CRUD for Orders
-- [ ] 2.2.2 Build Service management within Orders
-- [ ] 2.2.3 Add service status workflow transitions
-- [ ] 2.2.4 Implement renewal/upgrade/downgrade logic
-- [ ] 2.2.5 Track original orders for renewal chains
-- [ ] 2.2.6 Create order validation rules
+- [x] 2.2.1 Implement CRUD for Orders
+- [x] 2.2.2 Build Service management within Orders
+- [x] 2.2.3 Add service status workflow transitions
+- [x] 2.2.4 Implement renewal/upgrade/downgrade logic
+- [x] 2.2.5 Track original orders for renewal chains
+- [x] 2.2.6 Create order validation rules
+- [x] 2.2.7 Implement automatic service status updates (extended status)
+- [x] 2.2.8 Create background job for daily service status checks
+- [x] 2.2.9 Remove manual status transitions for automated statuses
 
-#### 2.3: Business Rules & Validations
+#### 2.3: As Sold vs As Delivered Implementation
 
-- [ ] 2.3.1 Implement complex validation logic
-- [ ] 2.3.2 Add business rule engine for pricing
-- [ ] 2.3.3 Create term length validations
-- [ ] 2.3.4 Build pro-rating calculations for mid-month starts/ends
-- [ ] 2.3.5 Add contract overlap detection
-- [ ] 2.3.6 Implement approval workflows
-- [ ] 2.3.7 Create billing cycle management rules
-- [ ] 2.3.8 Add invoice generation logic for accounting integration
+- [ ] 2.3.1 Add As Sold fields to Service model (preserve original values)
+- [ ] 2.3.2 Add As Delivered fields to Service model (dynamic values)
+- [ ] 2.3.3 Create migration to add new fields and populate existing data
+- [ ] 2.3.4 Update Service model to handle As Sold/As Delivered logic
+- [ ] 2.3.5 Update ServiceStatusUpdateJob to handle monthly extensions
+- [ ] 2.3.6 Update RevenueCalculator to use As Delivered values
+- [ ] 2.3.7 Add tests for As Sold/As Delivered behavior
+- [ ] 2.3.8 Update UI to show both As Sold and As Delivered values
+
+#### 2.4: Business Rules & Validations
+
+- [ ] 2.4.1 Implement complex validation logic
+- [ ] 2.4.2 Add business rule engine for pricing
+- [ ] 2.4.3 Create term length validations
+- [ ] 2.4.4 Build pro-rating calculations for mid-month starts/ends
+- [ ] 2.4.5 Add contract overlap detection
+- [ ] 2.4.6 Implement approval workflows
+- [ ] 2.4.7 Create billing cycle management rules
+- [ ] 2.4.8 Add invoice generation logic for accounting integration
 
 ### Phase 3: User Interface 🎨
 

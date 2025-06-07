@@ -1,0 +1,48 @@
+<div class="container">
+  <div class="header-actions">
+    <h1>Orders</h1>
+    <%= link_to "New Order", new_order_path, class: "button button-primary" %>
+  </div>
+
+  <% if @orders.any? %>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Order Number</th>
+            <th>Customer</th>
+            <th>Sold Date</th>
+            <th>TCV</th>
+            <th>Type</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @orders.each do |order| %>
+            <tr>
+              <td><%= link_to order.order_number, order %></td>
+              <td><%= order.customer.name %></td>
+              <td><%= order.sold_date&.strftime("%Y-%m-%d") %></td>
+              <td class="text-right <%= 'text-negative' if order.tcv && order.tcv < 0 %>">
+                <%= number_to_currency(order.tcv) %>
+              </td>
+              <td><%= order.order_type&.humanize %></td>
+              <td class="actions">
+                <%= link_to "View", order, class: "button button-small" %>
+                <%= link_to "Edit", edit_order_path(order), class: "button button-small" %>
+                <%= link_to "Delete", order, method: :delete, 
+                    data: { confirm: "Are you sure?" }, 
+                    class: "button button-small button-danger" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>No orders yet.</p>
+      <%= link_to "Create your first order", new_order_path, class: "button button-primary" %>
+    </div>
+  <% end %>
+</div>

@@ -20,6 +20,11 @@ Rails.application.routes.draw do
   # Password reset
   resources :password_resets, only: [ :new, :create, :edit, :update ]
 
-  # Temporary root - will be changed to dashboard later
-  root "sessions#new"
+  # Core resources
+  resources :orders do
+    resources :services
+  end
+
+  # Root path - orders index as the main dashboard
+  root "orders#index"
 end

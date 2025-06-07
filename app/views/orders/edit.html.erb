@@ -1,0 +1,10 @@
+<div class="container">
+  <h1>Edit Order</h1>
+
+  <%= render "form", order: @order %>
+
+  <div class="form-actions">
+    <%= link_to "Show", @order, class: "button" %>
+    <%= link_to "Back to Orders", orders_path, class: "button" %>
+  </div>
+</div>

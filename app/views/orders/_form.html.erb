@@ -1,0 +1,87 @@
+<%= form_with(model: order, data: { controller: "order-form" }) do |form| %>
+  <% if order.errors.any? %>
+    <div class="alert alert-danger">
+      <h4><%= pluralize(order.errors.count, "error") %> prohibited this order from being saved:</h4>
+      <ul>
+        <% order.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="form-group">
+        <%= form.label :customer_id %>
+        <%= form.select :customer_id, 
+            options_from_collection_for_select(@customers, :id, :name, order.customer_id),
+            { prompt: "Select a customer" },
+            { class: "form-control", required: true } %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :order_number %>
+        <%= form.text_field :order_number, class: "form-control", required: true %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :sold_date %>
+        <%= form.date_field :sold_date, class: "form-control" %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :tcv, "Total Contract Value" %>
+        <%= form.number_field :tcv, step: 0.01, class: "form-control" %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :order_type %>
+        <%= form.select :order_type, 
+            options_for_select([
+              ["New Order", "new_order"],
+              ["Renewal", "renewal"],
+              ["Upgrade", "upgrade"],
+              ["Downgrade", "downgrade"],
+              ["Cancellation", "cancellation"],
+              ["De-book", "de_book"]
+            ], order.order_type),
+            { prompt: "Select order type" },
+            { class: "form-control", data: { order_form_target: "orderType", action: "change->order-form#updateOriginalOrderRequirement" } } %>
+      </div>
+
+      <div class="form-group" id="original-order-field">
+        <%= form.label :original_order_id, "Original Order (for renewals, upgrades, downgrades, and de-books)" %>
+        <%= form.select :original_order_id, 
+            options_from_collection_for_select(
+              Order.where.not(id: order.id).order(order_number: :asc), 
+              :id, 
+              :display_name, 
+              order.original_order_id
+            ),
+            { prompt: "Select original order if applicable" },
+            { class: "form-control", data: { order_form_target: "originalOrderSelect" } } %>
+        <small class="form-text text-muted">Required for renewal and de-book orders</small>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :sales_rep %>
+        <%= form.text_field :sales_rep, class: "form-control" %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :site %>
+        <%= form.text_field :site, class: "form-control" %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :notes %>
+        <%= form.text_area :notes, rows: 3, class: "form-control" %>
+      </div>
+
+      <div class="form-actions">
+        <%= form.submit class: "button button-primary" %>
+      </div>
+    </div>
+  </div>
+<% end %>

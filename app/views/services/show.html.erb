@@ -1,0 +1,78 @@
+<div class="container">
+  <div class="header-actions">
+    <h1><%= @service.display_name %></h1>
+    <div>
+      <%= link_to "Edit", edit_order_service_path(@order, @service), class: "button" %>
+      <%= link_to "Back to Order", @order, class: "button" %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <dl class="details-list">
+        <dt>Service Type</dt>
+        <dd><%= @service.service_type %></dd>
+        
+        <dt>Service Name</dt>
+        <dd><%= @service.service_name %></dd>
+        
+        <dt>Status</dt>
+        <dd>
+          <span class="badge <%= "badge-#{@service.status}" %>">
+            <%= @service.status&.humanize %>
+          </span>
+        </dd>
+        
+        <dt>Term</dt>
+        <dd><%= @service.term_months %> months</dd>
+        
+        <dt>Units</dt>
+        <dd><%= @service.units %></dd>
+        
+        <dt>Unit Price</dt>
+        <dd><%= number_to_currency(@service.unit_price) %></dd>
+        
+        <dt>MRR</dt>
+        <dd><%= number_to_currency(@service.mrr) %></dd>
+        
+        <dt>NRCs</dt>
+        <dd><%= number_to_currency(@service.nrcs) %></dd>
+      </dl>
+    </div>
+  </div>
+
+  <% if @service.can_activate? || @service.can_cancel? || @service.can_renew? %>
+    <div class="card">
+      <div class="card-header">
+        <h3>Status Actions</h3>
+      </div>
+      <div class="card-body">
+        <div class="status-actions">
+          <% if @service.can_activate? %>
+            <%= button_to "Activate Service", 
+                          order_service_path(@order, @service, service: { action: "activate" }),
+                          method: :patch,
+                          class: "button button-primary",
+                          data: { confirm: "Are you sure you want to activate this service?" } %>
+          <% end %>
+          
+          <% if @service.can_cancel? %>
+            <%= button_to "Cancel Service", 
+                          order_service_path(@order, @service, service: { action: "cancel" }),
+                          method: :patch,
+                          class: "button button-danger",
+                          data: { confirm: "Are you sure you want to cancel this service? This action cannot be undone." } %>
+          <% end %>
+          
+          <% if @service.can_renew? %>
+            <%= button_to "Mark as Renewed", 
+                          order_service_path(@order, @service, service: { action: "renew" }),
+                          method: :patch,
+                          class: "button button-success",
+                          data: { confirm: "Are you sure you want to mark this service as renewed?" } %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,19 @@
+# Configuration for Solid Queue recurring jobs
+#
+# This file defines jobs that should run on a regular schedule
+# using Solid Queue's recurring functionality
+
+default: &default
+  service_status_update:
+    class: ServiceStatusUpdateJob
+    schedule: "0 1 * * *"  # Run daily at 1 AM
+    description: "Update service statuses based on contract dates"
+
+development:
+  <<: *default
+
+test:
+  # No recurring jobs in test environment
+
+production:
+  <<: *default

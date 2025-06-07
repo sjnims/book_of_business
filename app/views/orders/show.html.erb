@@ -1,0 +1,125 @@
+<div class="container">
+  <div class="header-actions">
+    <h1>Order <%= @order.order_number %></h1>
+    <div>
+      <%= link_to "Edit", edit_order_path(@order), class: "button" %>
+      <%= link_to "Back to Orders", orders_path, class: "button" %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row">
+        <div class="col">
+          <h3>Order Details</h3>
+          <dl class="details-list">
+            <dt>Order Number</dt>
+            <dd><%= @order.order_number %></dd>
+            
+            <dt>Customer</dt>
+            <dd><%= @order.customer.name %></dd>
+            
+            <dt>Sold Date</dt>
+            <dd><%= @order.sold_date&.strftime("%B %d, %Y") || "Not set" %></dd>
+            
+            <dt>Total Contract Value</dt>
+            <dd class="highlight"><%= number_to_currency(@order.tcv) %></dd>
+            
+            <dt>Order Type</dt>
+            <dd><%= @order.order_type&.humanize || "New order" %></dd>
+            
+            <dt>Sales Rep</dt>
+            <dd><%= @order.sales_rep.presence || "Not assigned" %></dd>
+            
+            <dt>Site</dt>
+            <dd><%= @order.site.presence || "Not specified" %></dd>
+            
+            <dt>Notes</dt>
+            <dd><%= @order.notes.presence || "No notes" %></dd>
+            
+            <% if @order.original_order.present? %>
+              <dt>Original Order</dt>
+              <dd><%= link_to @order.original_order.display_name, @order.original_order %></dd>
+            <% end %>
+            
+            <% if @order.is_de_book? && @order.original_order.present? %>
+              <dt>Available for De-book</dt>
+              <dd>
+                <% available = @order.original_order.available_for_de_book %>
+                <% if available.any? %>
+                  <ul>
+                    <% available.each do |service_type, units| %>
+                      <li><%= service_type.humanize %>: <%= units.to_i %> units</li>
+                    <% end %>
+                  </ul>
+                <% else %>
+                  <span class="text-muted">No pending units available</span>
+                <% end %>
+              </dd>
+            <% end %>
+          </dl>
+        </div>
+        
+        <div class="col">
+          <h3>Metadata</h3>
+          <dl class="details-list">
+            <dt>Created By</dt>
+            <dd><%= @order.created_by&.email || "System" %></dd>
+            
+            <dt>Created At</dt>
+            <dd><%= @order.created_at.strftime("%B %d, %Y %I:%M %p") %></dd>
+            
+            <dt>Last Updated</dt>
+            <dd><%= @order.updated_at.strftime("%B %d, %Y %I:%M %p") %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Services</h2>
+      <%= link_to "Add Service", new_order_service_path(@order), class: "button button-primary button-small" %>
+    </div>
+    <div class="card-body">
+      <% if @order.services.any? %>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Service Type</th>
+                <th>Status</th>
+                <th>Billing Start</th>
+                <th>Billing End</th>
+                <th>MRR</th>
+                <th>NRCs</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @order.services.each do |service| %>
+                <tr>
+                  <td><%= service.service_type %></td>
+                  <td><%= service.status&.humanize %></td>
+                  <td><%= service.billing_start_date&.strftime("%Y-%m-%d") %></td>
+                  <td><%= service.billing_end_date&.strftime("%Y-%m-%d") %></td>
+                  <td class="text-right"><%= number_to_currency(service.mrr) %></td>
+                  <td class="text-right"><%= number_to_currency(service.nrcs) %></td>
+                  <td class="actions">
+                    <%= link_to "Edit", edit_order_service_path(@order, service), class: "button button-small" %>
+                    <%= link_to "Delete", order_service_path(@order, service), method: :delete, 
+                        data: { confirm: "Are you sure?" }, 
+                        class: "button button-small button-danger" %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-muted">No services added yet.</p>
+      <% end %>
+    </div>
+  </div>
+</div>

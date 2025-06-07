@@ -1,0 +1,126 @@
+<%= form_with(model: [@order, service]) do |form| %>
+  <% if service.errors.any? %>
+    <div class="alert alert-danger">
+      <h4><%= pluralize(service.errors.count, "error") %> prohibited this service from being saved:</h4>
+      <ul>
+        <% service.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row">
+        <div class="col">
+          <h3>Service Details</h3>
+          
+          <div class="form-group">
+            <%= form.label :service_type %>
+            <%= form.select :service_type, 
+                options_for_select([
+                  ["Internet", "internet"],
+                  ["Voice", "voice"],
+                  ["Data", "data"],
+                  ["Cloud", "cloud"],
+                  ["Managed Services", "managed_services"],
+                  ["Equipment", "equipment"],
+                  ["Other", "other"]
+                ], service.service_type),
+                { prompt: "Select service type" },
+                { class: "form-control", required: true } %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :service_name %>
+            <%= form.text_field :service_name, class: "form-control" %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :status %>
+            <%= form.select :status, 
+                options_for_select([
+                  ["Pending Installation", "pending_installation"],
+                  ["Active", "active"],
+                  ["Extended", "extended"],
+                  ["Renewed", "renewed"],
+                  ["Canceled", "canceled"]
+                ], service.status),
+                { prompt: "Select status" },
+                { class: "form-control" } %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :site %>
+            <%= form.text_field :site, class: "form-control" %>
+          </div>
+        </div>
+
+        <div class="col">
+          <h3>Pricing</h3>
+          
+          <div class="form-group">
+            <%= form.label :units %>
+            <%= form.number_field :units, step: 0.01, class: "form-control" %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :unit_price %>
+            <%= form.number_field :unit_price, step: 0.01, class: "form-control" %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :nrcs, "Non-Recurring Charges (NRCs)" %>
+            <%= form.number_field :nrcs, step: 0.01, class: "form-control" %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :annual_escalator, "Annual Escalator (%)" %>
+            <%= form.number_field :annual_escalator, step: 0.01, class: "form-control" %>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <h3>Contract Terms</h3>
+          
+          <div class="form-group">
+            <%= form.label :term_months %>
+            <%= form.number_field :term_months, class: "form-control", required: true %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :billing_start_date %>
+            <%= form.date_field :billing_start_date, class: "form-control", required: true %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :billing_end_date %>
+            <%= form.date_field :billing_end_date, class: "form-control" %>
+          </div>
+        </div>
+
+        <div class="col">
+          <h3>Revenue Recognition</h3>
+          
+          <div class="form-group">
+            <%= form.label :rev_rec_start_date %>
+            <%= form.date_field :rev_rec_start_date, class: "form-control" %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :rev_rec_end_date %>
+            <%= form.date_field :rev_rec_end_date, class: "form-control" %>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <%= form.submit class: "button button-primary" %>
+        <%= link_to "Cancel", @order, class: "button" %>
+      </div>
+    </div>
+  </div>
+<% end %>
