@@ -3,8 +3,20 @@ name: "CodeQL"
 on:
   push:
     branches: [ "main", "develop" ]
+    paths-ignore:
+      - '**.md'
+      - '.github/**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   pull_request:
     branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
+      - '.github/**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   schedule:
     - cron: '17 8 * * 1'  # Weekly on Monday at 8:17 AM UTC (randomized to avoid load spikes)
 

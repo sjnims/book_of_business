@@ -1,0 +1,128 @@
+name: Documentation
+
+on:
+  pull_request:
+    paths:
+      - '**.md'
+      - '.github/**.md'
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**.md'
+      - '.github/**.md'
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+
+jobs:
+  # Quick documentation checks
+  docs-check:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check markdown files
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: |
+            **/*.md
+            !vendor/**/*.md
+            !tmp/**/*.md
+            !coverage/**/*.md
+          config: |
+            {
+              "default": true,
+              "MD013": false,
+              "MD033": false,
+              "MD041": false
+            }
+
+      - name: Check for broken links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >
+            --verbose
+            --no-progress
+            --exclude-mail
+            --exclude 'localhost|127\.0\.0\.1'
+            --exclude 'github\.com.*/(issues|pull|edit|releases|actions|projects|wiki)'
+            --accept 200,204,301,302,304
+            --max-concurrency 5
+            '**/*.md'
+            '!vendor/**'
+            '!tmp/**'
+          fail: false  # Don't fail on broken links, just report
+
+      - name: Check spelling
+        uses: streetsidesoftware/cspell-action@v6
+        with:
+          files: |
+            **/*.md
+            !vendor/**
+            !tmp/**
+            !coverage/**
+          config: |
+            {
+              "version": "0.2",
+              "language": "en",
+              "ignorePaths": [
+                "vendor/**",
+                "tmp/**",
+                "coverage/**",
+                "*.lock",
+                "*.log"
+              ],
+              "words": [
+                "bbnb",
+                "gaap",
+                "mrr",
+                "arr",
+                "tcv",
+                "nrcs",
+                "codeql",
+                "codecov",
+                "brakeman",
+                "rubocop",
+                "minitest",
+                "hotwire",
+                "turbo",
+                "stimulus",
+                "propshaft",
+                "importmap",
+                "actioncable",
+                "actionmailer",
+                "actionpack",
+                "actionview",
+                "activejob",
+                "activemodel",
+                "activerecord",
+                "activestorage",
+                "activesupport",
+                "sjnims",
+                "anthropic"
+              ],
+              "ignoreWords": [],
+              "import": []
+            }
+
+  # Summary status
+  docs-status:
+    name: Documentation Status
+    runs-on: ubuntu-latest
+    needs: docs-check
+    if: always()
+
+    steps:
+      - name: Documentation checks status
+        run: |
+          if [[ "${{ needs.docs-check.result }}" == "success" ]]; then
+            echo "✅ All documentation checks passed!"
+          else
+            echo "❌ Documentation checks failed"
+            exit 1
+          fi

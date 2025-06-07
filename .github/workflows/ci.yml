@@ -3,8 +3,20 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    paths-ignore:
+      - '**.md'
+      - '.github/**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   push:
     branches: [ main, develop ]
+    paths-ignore:
+      - '**.md'
+      - '.github/**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   schedule:
     # Run security scans daily at 2 AM UTC
     - cron: '0 2 * * *'
