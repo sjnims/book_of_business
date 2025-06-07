@@ -154,6 +154,26 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  test "should create user with default role when role not specified" do
+    post login_path, params: { email: @admin.email, password: "password123" }
+
+    assert_difference("User.count", 1) do
+      post users_path, params: {
+        user: {
+          email: "norole@test.com",
+          name: "No Role User",
+          password: "password123",
+          password_confirmation: "password123",
+          # Note: no role specified
+        },
+      }
+    end
+
+    new_user = User.find_by(email: "norole@test.com")
+
+    assert_equal "viewer", new_user.role # Should default to viewer
+  end
+
   test "should not create duplicate user" do
     post login_path, params: { email: @admin.email, password: "password123" }
 
