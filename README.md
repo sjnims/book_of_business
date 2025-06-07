@@ -1,7 +1,7 @@
 # Book of Business
 
 [![CI](https://github.com/sjnims/book_of_business/actions/workflows/ci.yml/badge.svg)](https://github.com/sjnims/book_of_business/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/sjnims/book_of_business/actions/workflows/codeql.yml/badge.svg)](https://github.com/sjnims/book_of_business/security/code-scanning)
+[![CodeQL](https://github.com/sjnims/book_of_business/actions/workflows/codeql.yml/badge.svg)](https://github.com/sjnims/book_of_business/actions/workflows/codeql.yml)
 [![codecov](https://codecov.io/gh/sjnims/book_of_business/graph/badge.svg?token=mzBScx1grB)](https://codecov.io/gh/sjnims/book_of_business)
 [![Ruby](https://img.shields.io/badge/Ruby-3.4.4-red.svg)](https://www.ruby-lang.org)
 [![Rails](https://img.shields.io/badge/Rails-8.0.2-red.svg)](https://rubyonrails.org)

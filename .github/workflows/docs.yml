@@ -41,7 +41,6 @@ jobs:
           args: >
             --verbose
             --no-progress
-            --exclude-mail
             --exclude 'localhost|127\.0\.0\.1'
             --exclude 'github\.com.*/(issues|pull|edit|releases|actions|projects|wiki)'
             --accept 200,204,301,302,304
