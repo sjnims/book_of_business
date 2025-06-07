@@ -7,6 +7,8 @@
 #
 # Cannot be deleted if they have associated orders
 class Customer < ApplicationRecord
+  include Auditable
+
   # Associations
   has_many :orders, dependent: :restrict_with_error
   has_many :services, through: :orders
@@ -24,6 +26,9 @@ class Customer < ApplicationRecord
 
   # Callbacks
   before_validation :normalize_customer_id
+
+  # Audit configuration - track all customer data changes
+  audit_exclude :created_at, :updated_at
 
   # Instance methods
 

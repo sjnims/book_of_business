@@ -8,6 +8,8 @@
 #
 # Includes password reset functionality with secure tokens
 class User < ApplicationRecord
+  include Auditable
+
   has_secure_password
 
   # Define roles
@@ -23,6 +25,9 @@ class User < ApplicationRecord
 
   # Callbacks
   before_save :downcase_email
+
+  # Audit configuration - track important user fields
+  audited :name, :email, :role
 
   # Password reset functionality
 

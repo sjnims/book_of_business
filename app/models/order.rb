@@ -8,6 +8,8 @@
 #
 # Automatically calculates totals from associated services
 class Order < ApplicationRecord
+  include Auditable
+
   # Associations
   belongs_to :customer
   belongs_to :original_order, class_name: "Order", optional: true
@@ -37,6 +39,9 @@ class Order < ApplicationRecord
   # Callbacks
   before_validation :normalize_order_number
   before_save :calculate_totals
+
+  # Audit configuration - track all order changes
+  audit_exclude :created_at, :updated_at
 
   # Nested attributes
   accepts_nested_attributes_for :services, allow_destroy: true

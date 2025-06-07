@@ -106,7 +106,9 @@ order_data = [
         service_type: "internet",
         term_months: 36,
         billing_start_date: 2.months.ago,
+        billing_end_date: 2.months.ago + 36.months - 1.day,
         rev_rec_start_date: 2.months.ago,
+        rev_rec_end_date: 2.months.ago + 36.months - 1.day,
         units: 1,
         unit_price: 500.00,
         nrcs: 1000.00,
@@ -142,7 +144,9 @@ order_data = [
         service_type: "internet",
         term_months: 24,
         billing_start_date: 5.months.ago,
+        billing_end_date: 5.months.ago + 24.months - 1.day,
         rev_rec_start_date: 5.months.ago,
+        rev_rec_end_date: 5.months.ago + 24.months - 1.day,
         units: 2,
         unit_price: 300.00,
         nrcs: 0.00,
@@ -179,7 +183,9 @@ order_data = [
         service_type: "cloud",
         term_months: 24,
         billing_start_date: 23.months.ago,
+        billing_end_date: 23.months.ago + 24.months - 1.day,
         rev_rec_start_date: 23.months.ago,
+        rev_rec_end_date: 23.months.ago + 24.months - 1.day,
         units: 10,
         unit_price: 100.00,
         nrcs: 0.00,
@@ -233,7 +239,9 @@ if original_order && !Order.exists?(order_number: "ORD-2024-003")
       service_type: original_service.service_type,
       term_months: 24,
       billing_start_date: 1.month.from_now,
+      billing_end_date: 1.month.from_now + 24.months - 1.day,
       rev_rec_start_date: 1.month.from_now,
+      rev_rec_end_date: 1.month.from_now + 24.months - 1.day,
       units: original_service.units,
       unit_price: original_service.unit_price * 1.1, # 10% increase
       nrcs: 0.00,
@@ -253,5 +261,5 @@ puts "  Customers: #{Customer.count}"
 puts "  Orders: #{Order.count}"
 puts "  Services: #{Service.count}"
 puts "  Active Services: #{Service.active.count}"
-puts "  Total MRR: $#{Service.active.sum(:mrr).round(2)}"
-puts "  Total ARR: $#{Service.active.sum(:arr).round(2)}"
+puts "  Total MRR: $#{Service.active.sum(&:mrr).round(2)}"
+puts "  Total ARR: $#{Service.active.sum(&:arr).round(2)}"

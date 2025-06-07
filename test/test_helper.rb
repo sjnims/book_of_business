@@ -90,5 +90,18 @@ module ActiveSupport
     fixtures :all
 
     # Add more helper methods to be used by all tests here...
+
+    # Helper method to clean database for tests that need isolation from fixtures
+    def clean_database!
+      # Disable audit logging during cleanup
+      Current.user = nil
+
+      # Clean in correct order to avoid foreign key constraints
+      AuditLog.delete_all
+      Service.delete_all
+      Order.delete_all
+      Customer.delete_all
+      User.delete_all
+    end
   end
 end

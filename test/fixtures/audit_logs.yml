@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+customer_create:
+  auditable_type: Customer
+  auditable_id: <%= ActiveRecord::FixtureSet.identify(:acme) %>
+  user: admin
+  action: create
+  audited_changes: '{"customer_id":{"from":null,"to":"ACME"},"name":{"from":null,"to":"ACME Corporation"}}'
+  ip_address: 127.0.0.1
+  user_agent: Mozilla/5.0
+
+customer_update:
+  auditable_type: Customer
+  auditable_id: <%= ActiveRecord::FixtureSet.identify(:acme) %>
+  user: sales_rep
+  action: update
+  audited_changes: '{"email":{"from":null,"to":"contact@acme.com"}}'
+  ip_address: 192.168.1.100
+  user_agent: Chrome/100.0

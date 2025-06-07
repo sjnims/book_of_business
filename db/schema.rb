@@ -10,9 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_07_181500) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_07_181501) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "audit_logs", force: :cascade do |t|
+    t.string "auditable_type", null: false
+    t.bigint "auditable_id", null: false
+    t.bigint "user_id", null: false
+    t.string "action", null: false
+    t.text "audited_changes"
+    t.string "ip_address"
+    t.string "user_agent"
+    t.jsonb "metadata"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["action"], name: "index_audit_logs_on_action"
+    t.index ["auditable_type", "auditable_id"], name: "index_audit_logs_on_auditable_type_and_auditable_id"
+    t.index ["created_at"], name: "index_audit_logs_on_created_at"
+    t.index ["user_id"], name: "index_audit_logs_on_user_id"
+  end
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id"
@@ -118,6 +135,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_07_181500) do
     t.index ["password_reset_token"], name: "index_users_on_password_reset_token", unique: true
   end
 
+  add_foreign_key "audit_logs", "users"
   add_foreign_key "orders", "customers"
   add_foreign_key "orders", "orders", column: "original_order_id"
   add_foreign_key "services", "orders"

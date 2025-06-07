@@ -120,6 +120,11 @@ class OrderTest < ActiveSupport::TestCase
   end
 
   test "should handle renewals scope correctly" do
+    clean_database!
+
+    # Re-create customer since we cleaned the database
+    @customer = Customer.create!(customer_id: "TEST001", name: "Test Customer")
+    @order.customer = @customer
     @order.save!
 
     assert_empty Order.renewals
@@ -267,6 +272,11 @@ class OrderTest < ActiveSupport::TestCase
   end
 
   test "should order by date with by_date scope" do
+    clean_database!
+
+    # Re-create customer since we cleaned the database
+    @customer = Customer.create!(customer_id: "TEST001", name: "Test Customer")
+
     older_order = Order.create!(
       customer: @customer,
       order_number: "ORD004",
@@ -517,6 +527,11 @@ class OrderTest < ActiveSupport::TestCase
   end
 
   test "should limit recent scope to 10 orders" do
+    clean_database!
+
+    # Re-create customer since we cleaned the database
+    @customer = Customer.create!(customer_id: "TEST001", name: "Test Customer")
+
     # Create 15 orders
     15.times do |i|
       Order.create!(

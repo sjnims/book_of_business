@@ -1,0 +1,31 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+order_one:
+  customer: acme
+  order_number: ORD-001
+  order_type: new_order
+  sold_date: <%= 30.days.ago %>
+  tcv: 50000.00
+  baseline_mrr: 1000.00
+  gaap_mrr: 1000.00
+  notes: First order
+
+order_two:
+  customer: globex
+  order_number: ORD-002
+  order_type: new_order
+  sold_date: <%= 20.days.ago %>
+  tcv: 30000.00
+  baseline_mrr: 500.00
+  gaap_mrr: 500.00
+
+renewal_order:
+  customer: acme
+  order_number: ORD-003
+  order_type: renewal
+  sold_date: <%= 5.days.ago %>
+  original_order: order_one
+  tcv: 55000.00
+  baseline_mrr: 1100.00
+  gaap_mrr: 1100.00
+  notes: Renewal with 10% increase

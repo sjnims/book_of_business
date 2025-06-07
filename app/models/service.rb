@@ -8,6 +8,8 @@
 #
 # Key calculations include MRR with escalations, TCV, and ARR
 class Service < ApplicationRecord
+  include Auditable
+
   # Associations
   belongs_to :order
   has_one :customer, through: :order
@@ -42,6 +44,9 @@ class Service < ApplicationRecord
   # Callbacks
   before_validation :calculate_end_dates_from_term
   before_save :calculate_revenue_fields
+
+  # Audit configuration - track all service changes
+  audit_exclude :created_at, :updated_at
 
   # Instance methods
 

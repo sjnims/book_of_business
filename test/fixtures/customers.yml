@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+acme:
+  customer_id: ACME
+  name: ACME Corporation
+  email: contact@acme.com
+  phone: 555-1234
+  technical_contact_name: John Tech
+  technical_contact_email: tech@acme.com
+
+globex:
+  customer_id: GLOBEX
+  name: Globex Corporation
+  email: info@globex.com
+  phone: 555-5678
+  technical_contact_name: Jane Engineer
+  technical_contact_email: tech@globex.com

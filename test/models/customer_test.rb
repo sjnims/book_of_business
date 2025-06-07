@@ -300,6 +300,8 @@ class CustomerTest < ActiveSupport::TestCase
   end
 
   test "should order customers by name with by_name scope" do
+    clean_database!
+
     customer_b = Customer.create!(customer_id: "CUST002", name: "B Customer")
     customer_a = Customer.create!(customer_id: "CUST001", name: "A Customer")
     customer_c = Customer.create!(customer_id: "CUST003", name: "C Customer")
