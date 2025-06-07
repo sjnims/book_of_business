@@ -1,30 +1,4 @@
 /**
- * @name Rails unsafe parameter usage
- * @description Detects potentially unsafe usage of params in Rails controllers
- * @kind problem
- * @problem.severity warning
- * @precision high
- * @id ruby/unsafe-params-usage
- * @tags security
- *       external/cwe/cwe-915
- *       rails
- */
-
-import ruby
-
-from MethodCall mc, Method m
-where
-  mc.getMethodName() = "params" and
-  not exists(MethodCall permit |
-    permit.getMethodName() = "permit" and
-    permit.getReceiver() = mc
-  ) and
-  exists(Assignment a | a.getRhs() = mc)
-select mc, "Direct params usage without permit() may lead to mass assignment vulnerabilities"
-
----
-
-/**
  * @name Hardcoded secrets in Rails
  * @description Detects hardcoded secrets in Rails configuration
  * @kind problem
@@ -36,18 +10,21 @@ select mc, "Direct params usage without permit() may lead to mass assignment vul
  */
 
 import ruby
+import codeql.ruby.dataflow.DataFlow
 
-from StringLiteral s, Assignment a
+from AssignExpr ae, StringLiteral str
 where
-  a.getRhs() = s and
+  ae.getRightOperand() = str and
   (
-    a.getLhs().toString().matches("%secret%") or
-    a.getLhs().toString().matches("%password%") or
-    a.getLhs().toString().matches("%token%") or
-    a.getLhs().toString().matches("%key%")
+    ae.getLeftOperand().toString().toLowerCase().matches("%secret%") or
+    ae.getLeftOperand().toString().toLowerCase().matches("%password%") or
+    ae.getLeftOperand().toString().toLowerCase().matches("%token%") or
+    ae.getLeftOperand().toString().toLowerCase().matches("%key%") or
+    ae.getLeftOperand().toString().toLowerCase().matches("%api%")
   ) and
-  s.getValue().length() > 8 and
-  not s.getValue() = "change_me" and
-  not s.getValue() = "password" and
-  not s.getValue() = "secret"
-select s, "Potential hardcoded secret found. Use Rails credentials or environment variables instead."
+  str.getConstantValue().toString().length() > 6 and
+  not str.getConstantValue().toString() = "change_me" and
+  not str.getConstantValue().toString() = "password" and
+  not str.getConstantValue().toString() = "secret" and
+  not str.getConstantValue().toString() = "your_secret_key_here"
+select ae, "Potential hardcoded secret: " + ae.getLeftOperand().toString() + ". Use Rails credentials or environment variables instead."

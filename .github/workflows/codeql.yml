@@ -60,13 +60,6 @@ jobs:
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
-        # Enhanced query suites for enterprise security
-        queries: |
-          +security-extended
-          +security-and-quality
-          +security-experimental
-          +.github/codeql/rails-security.qls
-          +.github/codeql/custom-queries.ql
         # Use our comprehensive configuration file
         config-file: ./.github/codeql/codeql-config.yml
 
