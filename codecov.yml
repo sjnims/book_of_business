@@ -1,7 +1,5 @@
 codecov:
   require_ci_to_pass: true
-  notify:
-    wait_for_ci: true
 
 coverage:
   precision: 2
@@ -129,7 +127,8 @@ component_management:
       - "!spec/**"
   
   individual_components:
-    - name: critical_business_logic
+    - component_id: critical_business_logic
+      name: critical_business_logic
       paths:
         - "app/models/order.rb"
         - "app/models/service.rb"
@@ -141,13 +140,3 @@ component_management:
           target: 95%  # Critical files need near-complete coverage
           threshold: 0%
 
-# Notification settings
-notify:
-  slack:
-    default:
-      threshold: 2%
-      only_pulls: false
-      branches: 
-        - main
-      flags: null
-      paths: null
